@@ -57,6 +57,22 @@
   h1{font-size:19px; font-weight:650; letter-spacing:-.01em; margin:0}
   .sub{font-size:13px; color:var(--ink-3)}
 
+  /* ---- select (người chấm + bộ lọc) ---- */
+  select{
+    font:inherit; font-size:13.5px; font-weight:550; color:var(--ink);
+    background:var(--panel); border:1px solid var(--line-2); border-radius:7px;
+    padding:7px 10px; cursor:pointer; max-width:220px;
+  }
+  select:hover{border-color:var(--ink-3)}
+  select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .me{margin-left:auto; display:flex; align-items:center; gap:8px}
+  .me > span, .f > span{font-size:12px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-3); font-weight:650; white-space:nowrap}
+  .me.warn select{border-color:var(--accent); background:var(--accent-soft)}
+  .filters{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px}
+  .f{display:flex; align-items:center; gap:8px}
+  .ghost.sm{padding:6px 11px; font-size:13px}
+
   /* ---- tabs ---- */
   .tabs{display:flex; gap:4px; background:var(--panel-2); border:1px solid var(--line);
         padding:4px; border-radius:var(--r); margin-bottom:20px}
@@ -203,7 +219,13 @@
 <div class="wrap">
   <header>
     <h1>Chấm điểm năng lực tư vấn</h1>
-    <span class="sub">Salesup &middot; Bộ câu hỏi Q2 &middot; Dữ liệu nhân sự tháng 7</span>
+    <span class="sub">Bộ câu hỏi Q2 &middot; Dữ liệu nhân sự tháng 7</span>
+    <label class="me">
+      <span>Người chấm</span>
+      <select id="me" aria-label="Salesup đang chấm">
+        <option value="">— Chọn tên bạn —</option>
+      </select>
+    </label>
   </header>
 
   <div class="tabs" role="tablist">
@@ -226,6 +248,17 @@
 
   <!-- ================= TAB: ĐÃ CHẤM ================= -->
   <section id="p-done" role="tabpanel" aria-labelledby="tab-done" class="hide">
+    <div class="filters">
+      <label class="f">
+        <span>Salesup</span>
+        <select id="f-sup"><option value="">Tất cả</option></select>
+      </label>
+      <label class="f">
+        <span>Salon</span>
+        <select id="f-salon"><option value="">Tất cả</option></select>
+      </label>
+      <button class="ghost sm hide" id="f-clear">Bỏ lọc</button>
+    </div>
     <div class="toolbar">
       <span class="grow left" id="donesum">Chưa có nhân sự nào được chấm.</span>
       <button class="ghost" id="csv">Tải file CSV</button>
@@ -285,13 +318,21 @@ const SCALE = {
 };
 const formOf = v => v === "Stylist" ? FORMS.Stylist : FORMS.SkinnerSup;
 
+/* Danh sách Salesup — theo file "Chia salon cụm Salesup - phân cụm mới tháng 7" */
+const SALESUP = ["Nguyễn Thị Phương Anh","Nguyễn Thị Thanh Tâm","Ngô Thị Mai Loan","Phạm Thị Nga"];
+
 /* ---------- state ---------- */
 const KEY = "salesup_cham_diem_v1";
+const ME_KEY = "salesup_nguoi_cham";
 let done = [];
 try { done = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { done = []; }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){} };
 
+let me = "";
+try { me = localStorage.getItem(ME_KEY) || ""; } catch(e) { me = ""; }
+
 let picked = null, scores = [];
+let fSup = "", fSalon = "";
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -301,7 +342,8 @@ const initials = n => n.trim().split(/\s+/).slice(-2).map(w=>w[0]).join("").toUp
 const fmtTime = iso => { const d = new Date(iso); const p = n => String(n).padStart(2,"0");
   return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
 
-/* điểm nhóm = TB các câu trong nhóm; tổng = Σ (trọng số × điểm nhóm), quy đổi thang 100 */
+/* Điểm nhóm = TB các câu ĐÃ chấm trong nhóm; tổng = Σ (trọng số × điểm nhóm), quy đổi thang 100.
+   Quy tắc hoàn tất: mỗi nhóm năng lực chỉ cần chấm tối thiểu 1 câu. */
 function calc(vitri, sc){
   const groups = formOf(vitri);
   let i = 0, total = 0; const gAvg = [];
@@ -313,7 +355,8 @@ function calc(vitri, sc){
   }
   const filled = sc.filter(v => v != null).length;
   const n = groups.reduce((a,g)=>a+g.q.length,0);
-  return { gAvg, on5: total, on100: total/5*100, filled, n, complete: filled === n };
+  const missing = groups.filter((g,gi) => gAvg[gi] == null).map(g => g.t);
+  return { gAvg, on5: total, on100: total/5*100, filled, n, missing, complete: missing.length === 0 };
 }
 const band = p => p >= 80 ? "good" : p >= 60 ? "mid" : "low";
 const bandTxt = p => p >= 80 ? "Đạt tốt" : p >= 60 ? "Đạt" : "Cần cải thiện";
@@ -483,15 +526,22 @@ function refresh(){
     tp.className = "pill " + band(r.on100);
     tp.textContent = bandTxt(r.on100);
   }
-  $("tleft").textContent = r.complete ? "" : `Còn ${r.n - r.filled}/${r.n} câu chưa chấm`;
-  $("submit").disabled = !r.complete;
+  if (!r.complete){
+    $("tleft").textContent = `Cần chấm ít nhất 1 câu ở: ${r.missing.join(", ")}`;
+  } else if (!me){
+    $("tleft").textContent = "Chọn tên Salesup ở góc trên để hoàn tất.";
+  } else {
+    $("tleft").textContent = r.filled < r.n ? `Đã chấm ${r.filled}/${r.n} câu` : "";
+  }
+  $("submit").disabled = !r.complete || !me;
 }
 
 function submit(){
   const r = calc(picked.v, scores);
-  if (!r.complete) return;
+  if (!r.complete || !me) return;
   const rec = {
     id: picked.i, ten: picked.n, salon: picked.s, vitri: picked.v, level: picked.l,
+    salesup: me,
     scores: scores.slice(), gAvg: r.gAvg, on5: r.on5, on100: r.on100,
     at: new Date().toISOString()
   };
@@ -507,45 +557,83 @@ function submit(){
 }
 
 /* ---------- danh sách đã chấm ---------- */
+const shown = () => done.filter(d =>
+  (!fSup   || (d.salesup || "") === fSup) &&
+  (!fSalon || d.salon === fSalon));
+
+function fillFilters(){
+  const opts = (sel, vals, cur) => {
+    sel.innerHTML = '<option value="">Tất cả</option>' +
+      vals.map(v => `<option value="${esc(v)}"${v===cur?" selected":""}>${esc(v)}</option>`).join("");
+  };
+  const sups   = [...new Set(done.map(d => d.salesup).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"vi"));
+  const salons = [...new Set(done.map(d => d.salon))].sort((a,b)=>a.localeCompare(b,"vi"));
+  opts($("f-sup"), sups, fSup);
+  opts($("f-salon"), salons, fSalon);
+  $("f-clear").classList.toggle("hide", !fSup && !fSalon);
+}
+
 function renderDone(){
   $("cnt").textContent = done.length;
+  fillFilters();
   const wrap = $("donewrap");
+
   if (!done.length){
     $("donesum").textContent = "Chưa có nhân sự nào được chấm.";
     wrap.innerHTML = `<div class="blank"><div class="big">Chưa có nhân sự nào được chấm</div>
       Sang tab <strong>Chấm điểm</strong>, tìm nhân sự theo ID hoặc tên để bắt đầu.</div>`;
     return;
   }
-  const avg = done.reduce((a,d)=>a+d.on100,0)/done.length;
-  $("donesum").textContent = `${done.length} nhân sự đã chấm · điểm trung bình ${avg.toFixed(1)}/100`;
+
+  const list = shown();
+  if (!list.length){
+    $("donesum").textContent = `0/${done.length} nhân sự khớp bộ lọc`;
+    wrap.innerHTML = `<div class="blank"><div class="big">Không có nhân sự nào khớp bộ lọc</div>
+      Bỏ lọc để xem lại toàn bộ ${done.length} nhân sự đã chấm.</div>`;
+    return;
+  }
+
+  const avg = list.reduce((a,d)=>a+d.on100,0)/list.length;
+  const filtered = fSup || fSalon;
+  $("donesum").textContent =
+    `${list.length}${filtered ? "/" + done.length : ""} nhân sự đã chấm · điểm trung bình ${avg.toFixed(1)}/100`;
+
   wrap.innerHTML = `<table>
     <thead><tr>
-      <th>Thời gian chấm</th><th>ID</th><th>Tên nhân sự</th><th>Vị trí</th><th>Salon</th>
+      <th>Thời gian chấm</th><th>Salesup</th><th>ID</th><th>Tên nhân sự</th><th>Vị trí</th><th>Salon</th>
       <th>Điểm /100</th><th>Xếp loại</th><th></th>
     </tr></thead><tbody>
-    ${done.map((d,k) => `<tr>
+    ${list.map(d => `<tr>
       <td class="num">${esc(fmtTime(d.at))}</td>
+      <td>${esc(d.salesup || "—")}</td>
       <td class="num">${esc(d.id)}</td>
       <td class="nm">${esc(d.ten)}</td>
       <td>${esc(d.vitri)}</td>
       <td>${esc(d.salon)}</td>
       <td class="num"><strong>${d.on100.toFixed(1)}</strong></td>
       <td><span class="pill ${band(d.on100)}">${bandTxt(d.on100)}</span></td>
-      <td><button class="del" data-k="${k}" title="Xoá bản ghi">Xoá</button></td>
+      <td><button class="del" data-id="${esc(d.id)}" title="Xoá bản ghi">Xoá</button></td>
     </tr>`).join("")}
     </tbody></table>`;
+
   wrap.querySelectorAll(".del").forEach(b => b.onclick = () => {
-    const d = done[+b.dataset.k];
-    if (!confirm(`Xoá kết quả chấm của ${d.ten} (ID ${d.id})?`)) return;
-    done.splice(+b.dataset.k, 1); save(); renderDone();
+    const k = done.findIndex(d => d.id === b.dataset.id);
+    if (k < 0) return;
+    if (!confirm(`Xoá kết quả chấm của ${done[k].ten} (ID ${done[k].id})?`)) return;
+    done.splice(k, 1); save(); renderDone();
   });
 }
 
+$("f-sup").onchange   = e => { fSup = e.target.value; renderDone(); };
+$("f-salon").onchange = e => { fSalon = e.target.value; renderDone(); };
+$("f-clear").onclick  = () => { fSup = ""; fSalon = ""; renderDone(); };
+
 /* ---------- xuất CSV ---------- */
 $("csv").onclick = () => {
-  if (!done.length){ toast("Chưa có dữ liệu để tải."); return; }
-  const maxQ = Math.max(...done.map(d => d.scores.length));
-  const head = ["Thoi gian cham","ID","Ten nhan su","Vi tri","Level","Salon",
+  const list = shown();
+  if (!list.length){ toast("Chưa có dữ liệu để tải."); return; }
+  const maxQ = Math.max(...list.map(d => d.scores.length));
+  const head = ["Thoi gian cham","Salesup","ID","Ten nhan su","Vi tri","Level","Salon",
     "NL1 Nhan dien nhu cau (/5)","NL2 Tu van giai phap (/5)","NL3 Xay bill (/5)","NL4 Chot sale (/5)",
     "Diem tong (/5)","Diem tong (/100)","Xep loai",
     ...Array.from({length:maxQ}, (_,k) => `Cau ${k+1}`)];
@@ -553,8 +641,8 @@ $("csv").onclick = () => {
     const s = v == null ? "" : String(v);
     return /[",\n;]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
   };
-  const rows = done.map(d => [
-    fmtTime(d.at), d.id, d.ten, d.vitri, d.level, d.salon,
+  const rows = list.map(d => [
+    fmtTime(d.at), d.salesup || "", d.id, d.ten, d.vitri, d.level, d.salon,
     ...d.gAvg.map(a => a == null ? "" : a.toFixed(2)),
     d.on5.toFixed(2), d.on100.toFixed(1), bandTxt(d.on100),
     ...Array.from({length:maxQ}, (_,k) => d.scores[k] ?? "")
@@ -566,10 +654,24 @@ $("csv").onclick = () => {
   a.download = `cham-diem-nang-luc-tu-van_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast(`Đã tải file CSV — ${done.length} nhân sự.`);
+  toast(`Đã tải file CSV — ${list.length} nhân sự.`);
+};
+
+/* ---------- người chấm ---------- */
+function paintMe(){
+  document.querySelector(".me").classList.toggle("warn", !me);
+}
+$("me").innerHTML = '<option value="">— Chọn tên bạn —</option>' +
+  SALESUP.map(s => `<option value="${esc(s)}"${s===me?" selected":""}>${esc(s)}</option>`).join("");
+$("me").onchange = e => {
+  me = e.target.value;
+  try { localStorage.setItem(ME_KEY, me); } catch(err){}
+  paintMe();
+  if (picked) refresh();
 };
 
 /* ---------- init ---------- */
+paintMe();
 $("cnt").textContent = done.length;
 $("q").focus();
 </script>
