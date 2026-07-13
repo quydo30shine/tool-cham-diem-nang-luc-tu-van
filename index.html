@@ -1,0 +1,575 @@
+<title>Chấm điểm năng lực tư vấn — Salesup</title>
+<style>
+  :root{
+    --bg:#F7F5F2; --panel:#FFFFFF; --panel-2:#FAF8F5;
+    --ink:#1C1917; --ink-2:#57534E; --ink-3:#8A8175;
+    --line:#E4DFD8; --line-2:#D6CFC5;
+    --accent:#B45309; --accent-soft:#FDF0E2; --accent-ink:#7C3A05;
+    --good:#15803D; --good-soft:#E7F3EA;
+    --mid:#B45309; --mid-soft:#FBEEDD;
+    --low:#B91C1C; --low-soft:#FBEAEA;
+    --shadow:0 1px 2px rgba(28,25,23,.05), 0 8px 24px -12px rgba(28,25,23,.18);
+    --r:10px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#14120F; --panel:#1D1A16; --panel-2:#232019;
+      --ink:#F5F1EA; --ink-2:#B8B0A4; --ink-3:#8A8175;
+      --line:#332E27; --line-2:#453E34;
+      --accent:#F0A253; --accent-soft:#3A2913; --accent-ink:#F7C48C;
+      --good:#5FBF7E; --good-soft:#1B2E21;
+      --mid:#E4A056; --mid-soft:#33260F;
+      --low:#EF7B7B; --low-soft:#38201F;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14120F; --panel:#1D1A16; --panel-2:#232019;
+    --ink:#F5F1EA; --ink-2:#B8B0A4; --ink-3:#8A8175;
+    --line:#332E27; --line-2:#453E34;
+    --accent:#F0A253; --accent-soft:#3A2913; --accent-ink:#F7C48C;
+    --good:#5FBF7E; --good-soft:#1B2E21;
+    --mid:#E4A056; --mid-soft:#33260F;
+    --low:#EF7B7B; --low-soft:#38201F;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"]{
+    --bg:#F7F5F2; --panel:#FFFFFF; --panel-2:#FAF8F5;
+    --ink:#1C1917; --ink-2:#57534E; --ink-3:#8A8175;
+    --line:#E4DFD8; --line-2:#D6CFC5;
+    --accent:#B45309; --accent-soft:#FDF0E2; --accent-ink:#7C3A05;
+    --good:#15803D; --good-soft:#E7F3EA;
+    --mid:#B45309; --mid-soft:#FBEEDD;
+    --low:#B91C1C; --low-soft:#FBEAEA;
+    --shadow:0 1px 2px rgba(28,25,23,.05), 0 8px 24px -12px rgba(28,25,23,.18);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:15px; line-height:1.5; -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:20px 16px 80px}
+
+  /* ---- header ---- */
+  header{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:18px}
+  h1{font-size:19px; font-weight:650; letter-spacing:-.01em; margin:0}
+  .sub{font-size:13px; color:var(--ink-3)}
+
+  /* ---- tabs ---- */
+  .tabs{display:flex; gap:4px; background:var(--panel-2); border:1px solid var(--line);
+        padding:4px; border-radius:var(--r); margin-bottom:20px}
+  .tab{flex:1; border:0; background:transparent; color:var(--ink-2); cursor:pointer;
+       font:inherit; font-weight:550; font-size:14px; padding:9px 12px; border-radius:7px;
+       display:flex; align-items:center; justify-content:center; gap:7px}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--panel); color:var(--ink); box-shadow:var(--shadow)}
+  .tab .count{font-size:12px; font-variant-numeric:tabular-nums; background:var(--accent-soft);
+              color:var(--accent-ink); padding:1px 7px; border-radius:20px; font-weight:650}
+
+  /* ---- search ---- */
+  .searchbox{position:relative}
+  .searchbox input{
+    width:100%; padding:14px 16px; font:inherit; font-size:16px; color:var(--ink);
+    background:var(--panel); border:1px solid var(--line-2); border-radius:var(--r);
+    box-shadow:var(--shadow); outline:none;
+  }
+  .searchbox input::placeholder{color:var(--ink-3)}
+  .searchbox input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .results{
+    position:absolute; z-index:20; top:calc(100% + 6px); left:0; right:0;
+    background:var(--panel); border:1px solid var(--line-2); border-radius:var(--r);
+    box-shadow:var(--shadow); max-height:340px; overflow-y:auto; padding:5px;
+  }
+  .results:empty{display:none}
+  .hit{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+       padding:9px 10px; border:0; background:transparent; border-radius:7px;
+       cursor:pointer; font:inherit; color:var(--ink)}
+  .hit:hover,.hit.on{background:var(--panel-2)}
+  .hit .nm{font-weight:550; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .hit .id{font-variant-numeric:tabular-nums; font-size:13px; color:var(--ink-3)}
+  .hit .meta{font-size:12.5px; color:var(--ink-2); white-space:nowrap}
+  .empty{padding:14px; color:var(--ink-3); font-size:14px; text-align:center}
+
+  /* ---- staff card ---- */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+        box-shadow:var(--shadow); overflow:hidden}
+  .who{display:flex; align-items:center; gap:14px; padding:16px 18px;
+       border-bottom:1px solid var(--line); background:var(--panel-2)}
+  .who .avatar{width:42px; height:42px; flex:none; border-radius:50%; display:grid; place-items:center;
+       background:var(--accent-soft); color:var(--accent-ink); font-weight:650; font-size:15px}
+  .who .txt{flex:1; min-width:0}
+  .who .nm{font-weight:650; font-size:16px}
+  .who .meta{font-size:13px; color:var(--ink-2); margin-top:1px}
+  .who .meta b{font-weight:550; color:var(--ink); font-variant-numeric:tabular-nums}
+  .linkbtn{border:1px solid var(--line-2); background:var(--panel); color:var(--ink-2);
+       border-radius:7px; padding:6px 11px; font:inherit; font-size:13px; cursor:pointer}
+  .linkbtn:hover{color:var(--ink); border-color:var(--ink-3)}
+
+  .note{display:flex; gap:9px; padding:11px 18px; background:var(--accent-soft);
+        color:var(--accent-ink); font-size:13px; border-bottom:1px solid var(--line)}
+
+  /* ---- competency groups ---- */
+  .grp{border-bottom:1px solid var(--line)}
+  .grp:last-of-type{border-bottom:0}
+  .grp-hd{display:flex; align-items:center; gap:10px; padding:13px 18px; background:var(--panel-2)}
+  .grp-hd .t{flex:1; font-weight:600; font-size:14px}
+  .grp-hd .w{font-size:12px; font-weight:650; color:var(--ink-2); font-variant-numeric:tabular-nums;
+             border:1px solid var(--line-2); padding:2px 8px; border-radius:20px}
+  .grp-hd .avg{font-size:13px; font-weight:650; font-variant-numeric:tabular-nums; color:var(--ink-3); min-width:52px; text-align:right}
+  .grp-hd .avg.set{color:var(--accent)}
+
+  .q{padding:14px 18px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+  .q + .q{border-top:1px dashed var(--line)}
+  .q .txt{flex:1; min-width:220px; font-size:14px; color:var(--ink)}
+  .q .txt .n{color:var(--ink-3); font-variant-numeric:tabular-nums; margin-right:6px; font-size:13px}
+
+  .scale{display:flex; gap:5px; flex:none}
+  .scale button{width:40px; height:38px; border:1px solid var(--line-2); background:var(--panel);
+    border-radius:8px; font:inherit; font-weight:600; font-size:15px; color:var(--ink-2);
+    cursor:pointer; font-variant-numeric:tabular-nums}
+  .scale button:hover{border-color:var(--ink-3); color:var(--ink)}
+  .scale button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+  @media (prefers-color-scheme:dark){.scale button[aria-pressed="true"]{color:#14120F}}
+  :root[data-theme="dark"] .scale button[aria-pressed="true"]{color:#14120F}
+  :root[data-theme="light"] .scale button[aria-pressed="true"]{color:#fff}
+
+  /* ---- footer bar ---- */
+  .bar{position:sticky; bottom:0; margin-top:16px; display:flex; align-items:center; gap:14px;
+       flex-wrap:wrap; background:var(--panel); border:1px solid var(--line-2);
+       border-radius:var(--r); box-shadow:var(--shadow); padding:13px 16px}
+  .total{display:flex; align-items:baseline; gap:8px; flex:1; min-width:180px}
+  .total .lb{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); font-weight:600}
+  .total .v{font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+  .total .of{font-size:14px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+  .pill{font-size:12px; font-weight:650; padding:3px 10px; border-radius:20px}
+  .pill.good{background:var(--good-soft); color:var(--good)}
+  .pill.mid{background:var(--mid-soft); color:var(--mid)}
+  .pill.low{background:var(--low-soft); color:var(--low)}
+  .pill.na{background:var(--panel-2); color:var(--ink-3)}
+  .primary{border:0; background:var(--accent); color:#fff; font:inherit; font-weight:650; font-size:15px;
+    padding:11px 20px; border-radius:8px; cursor:pointer}
+  @media (prefers-color-scheme:dark){.primary{color:#14120F}}
+  :root[data-theme="dark"] .primary{color:#14120F}
+  :root[data-theme="light"] .primary{color:#fff}
+  .primary:disabled{background:var(--line-2); color:var(--ink-3); cursor:not-allowed}
+  .left{font-size:13px; color:var(--ink-3)}
+
+  /* ---- done table ---- */
+  .tablewrap{overflow-x:auto; background:var(--panel); border:1px solid var(--line);
+             border-radius:var(--r); box-shadow:var(--shadow)}
+  table{border-collapse:collapse; width:100%; font-size:14px}
+  th{text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em;
+     color:var(--ink-3); font-weight:650; padding:11px 14px; border-bottom:1px solid var(--line);
+     background:var(--panel-2); white-space:nowrap}
+  td{padding:11px 14px; border-bottom:1px solid var(--line); white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  td.num{font-variant-numeric:tabular-nums}
+  td.nm{font-weight:550; white-space:normal}
+  .del{border:0; background:transparent; color:var(--ink-3); cursor:pointer; font:inherit;
+       font-size:13px; padding:3px 7px; border-radius:6px}
+  .del:hover{background:var(--low-soft); color:var(--low)}
+  .toolbar{display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap}
+  .toolbar .grow{flex:1}
+  .ghost{border:1px solid var(--line-2); background:var(--panel); color:var(--ink);
+    font:inherit; font-size:14px; font-weight:550; padding:9px 14px; border-radius:8px; cursor:pointer}
+  .ghost:hover{border-color:var(--ink-3)}
+  .blank{padding:56px 20px; text-align:center; color:var(--ink-3)}
+  .blank .big{font-size:15px; color:var(--ink-2); font-weight:550; margin-bottom:4px}
+
+  /* ---- toast ---- */
+  .toast{position:fixed; left:50%; bottom:26px; transform:translate(-50%,16px);
+    background:var(--ink); color:var(--bg); padding:13px 18px; border-radius:10px;
+    font-size:14.5px; font-weight:550; display:flex; gap:10px; align-items:center;
+    box-shadow:0 12px 32px -8px rgba(0,0,0,.4); opacity:0; pointer-events:none;
+    transition:opacity .22s ease, transform .22s ease; z-index:60; max-width:90vw}
+  .toast.show{opacity:1; transform:translate(-50%,0)}
+  .toast .tick{width:20px; height:20px; flex:none; border-radius:50%; background:var(--good);
+    color:#fff; display:grid; place-items:center; font-size:12px; font-weight:700}
+  @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+  .hide{display:none !important}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  @media (max-width:560px){
+    .q{gap:10px}
+    .scale button{width:100%; flex:1}
+    .scale{width:100%}
+    .q .txt{min-width:100%}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Chấm điểm năng lực tư vấn</h1>
+    <span class="sub">Salesup &middot; Bộ câu hỏi Q2 &middot; Dữ liệu nhân sự tháng 7</span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-score" aria-selected="true" aria-controls="p-score">Chấm điểm</button>
+    <button class="tab" role="tab" id="tab-done" aria-selected="false" aria-controls="p-done">
+      Đã chấm <span class="count" id="cnt">0</span>
+    </button>
+  </div>
+
+  <!-- ================= TAB: CHẤM ĐIỂM ================= -->
+  <section id="p-score" role="tabpanel" aria-labelledby="tab-score">
+    <div class="searchbox" id="sb">
+      <input id="q" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Nhập ID hoặc tên nhân sự…" aria-label="Tìm nhân sự">
+      <div class="results" id="res" role="listbox"></div>
+    </div>
+
+    <div id="form" class="hide" style="margin-top:16px"></div>
+  </section>
+
+  <!-- ================= TAB: ĐÃ CHẤM ================= -->
+  <section id="p-done" role="tabpanel" aria-labelledby="tab-done" class="hide">
+    <div class="toolbar">
+      <span class="grow left" id="donesum">Chưa có nhân sự nào được chấm.</span>
+      <button class="ghost" id="csv">Tải file CSV</button>
+    </div>
+    <div class="tablewrap" id="donewrap"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const STAFF = [{"i":"20768","n":"Bùi Bá Khang","s":"10 TP","v":"Stylist","l":"L1"},{"i":"4502","n":"Hoàng Nguyên Hội","s":"10 TP","v":"Stylist","l":"L4"},{"i":"15250","n":"Lê Thị Ninh Khánh","s":"10 TP","v":"Skinner","l":"L1"},{"i":"20048","n":"Mã Tiểu Nghi","s":"10 TP","v":"Skinner","l":"L1"},{"i":"6920","n":"Nguyễn Huy Chiến","s":"10 TP","v":"Stylist","l":"L1"},{"i":"18311","n":"Nguyễn Lan Anh","s":"10 TP","v":"Skinner","l":"L1"},{"i":"20992","n":"Nguyễn Thị Cúc","s":"10 TP","v":"Skinner","l":"L1"},{"i":"13728","n":"Nguyễn Thị Khánh Linh","s":"10 TP","v":"Skinner","l":"L1"},{"i":"13866","n":"Nguyễn Thị Kim Ngân","s":"10 TP","v":"Supporter","l":"L2"},{"i":"19283","n":"Nguyễn Thị Lành","s":"10 TP","v":"Skinner","l":"L1"},{"i":"8646","n":"Nguyễn Thị Ngọc Hoàn","s":"10 TP","v":"Skinner","l":"L1"},{"i":"20989","n":"Nguyễn Thị Thu Xen","s":"10 TP","v":"Skinner","l":"L1"},{"i":"353","n":"Trần Trọng Long","s":"10 TP","v":"Stylist","l":"L2"},{"i":"12791","n":"Trần Trọng Nguyên","s":"10 TP","v":"Stylist","l":"L1"},{"i":"18629","n":"khanh.knsup","s":"10 TP","v":"Supporter","l":"LD"},{"i":"20102","n":"Đinh Thị Thuý Hiền","s":"10 TP","v":"Supporter","l":"L2"},{"i":"19535","n":"Đỗ Thị Trâm","s":"10 TP","v":"Skinner","l":"L1"},{"i":"2450","n":"Đỗ Văn Hùng","s":"10 TP","v":"Stylist","l":"L4"},{"i":"19648","n":"Cao Thị Mỹ Liên","s":"103 TN","v":"Skinner","l":"L1"},{"i":"16635","n":"Dương Thị Ngọc Trinh","s":"103 TN","v":"Skinner","l":"L2"},{"i":"5285","n":"Dương Đình Sáng","s":"103 TN","v":"Stylist","l":"L3"},{"i":"3035","n":"Kim Giang","s":"103 TN","v":"Stylist","l":"L3"},{"i":"7811","n":"Lâm Ngọc Đàn","s":"103 TN","v":"Supporter","l":"L2"},{"i":"19612","n":"Liễu Thanh Mai","s":"103 TN","v":"Skinner","l":"L1"},{"i":"17679","n":"Liễu Thị Thanh Trúc","s":"103 TN","v":"Skinner","l":"L1"},{"i":"8580","n":"Lâm Thanh Thế","s":"103 TN","v":"Stylist","l":"L1"},{"i":"13663","n":"Lê Hoàng Lân","s":"103 TN","v":"Stylist","l":"L1"},{"i":"19251","n":"Lê Huỳnh Tường Vi","s":"103 TN","v":"Skinner","l":"L1"},{"i":"19220","n":"Lê thị yến","s":"103 TN","v":"Skinner","l":"L1"},{"i":"9963","n":"Nguyễn Huy Bảo","s":"103 TN","v":"Stylist","l":"L1"},{"i":"21206","n":"Nguyễn Lê Phương Vy","s":"103 TN","v":"Skinner","l":"L1"},{"i":"9672","n":"Nguyễn Minh Sơn","s":"103 TN","v":"Stylist","l":"L2"},{"i":"14625","n":"Nguyễn Minh Tiếng","s":"103 TN","v":"Stylist","l":"L2"},{"i":"10023","n":"Nguyễn Thế Nghĩa","s":"103 TN","v":"Stylist","l":"L2"},{"i":"18811","n":"Nguyễn Thị Hồng Hà","s":"103 TN","v":"Skinner","l":"L1"},{"i":"17415","n":"Nguyễn Thị Ngọc Huyền","s":"103 TN","v":"Skinner","l":"L2"},{"i":"20771","n":"Nguyễn Thị Thu Ngân","s":"103 TN","v":"Skinner","l":"L1"},{"i":"13946","n":"Nguyễn Thị Thuỳ Dung","s":"103 TN","v":"Supporter","l":"L1"},{"i":"6489","n":"Nguyễn Văn Hây","s":"103 TN","v":"Stylist","l":"L3"},{"i":"2645","n":"Nguyễn Văn Hải","s":"103 TN","v":"Stylist","l":"L3"},{"i":"19783","n":"Nguyễn Văn Đạt","s":"103 TN","v":"Stylist","l":"L1"},{"i":"7575","n":"Thị Bé Ngọc","s":"103 TN","v":"Skinner","l":"L2"},{"i":"14148","n":"Trần Hoàng Linh","s":"103 TN","v":"Stylist","l":"L2"},{"i":"3665","n":"Trần Nguyễn Hoàng Tòng","s":"103 TN","v":"Stylist","l":"L1"},{"i":"19682","n":"Trần Nguyễn Trâm Anh","s":"103 TN","v":"Skinner","l":"L1"},{"i":"14167","n":"Trần Thị Giàu","s":"103 TN","v":"Stylist","l":"L1"},{"i":"19801","n":"Trần Thị Kim Phượng","s":"103 TN","v":"Skinner","l":"L1"},{"i":"4724","n":"Tăng Đức Phi","s":"103 TN","v":"Stylist","l":"L3"},{"i":"14833","n":"Đoàn Tấn Tài","s":"103 TN","v":"Stylist","l":"L1"},{"i":"18694","n":"Bùi Phương Anh","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"1395","n":"Bùi Việt Hưng","s":"109 TQH","v":"Supporter","l":"L2"},{"i":"11889","n":"Hoàng Văn Hương","s":"109 TQH","v":"Stylist","l":"L2"},{"i":"10606","n":"Hoàng Văn Phóng","s":"109 TQH","v":"Stylist","l":"L1"},{"i":"20688","n":"Lưu Đình Tuyển","s":"109 TQH","v":"Stylist","l":"L1"},{"i":"21153","n":"Nguyễn Thị Khánh Ly","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"21144","n":"Nguyễn Văn Giao","s":"109 TQH","v":"Stylist","l":"L1"},{"i":"8475","n":"Nguyễn Văn Phúc","s":"109 TQH","v":"Stylist","l":"L2"},{"i":"14094","n":"Phạm Thị Hương Giang","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"11987","n":"Trần Ngọc Nguyên","s":"109 TQH","v":"Stylist","l":"L2"},{"i":"18226","n":"Trần Thị Kim Ngân","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"21023","n":"Trần Thị Thu Trang","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"17362","n":"Trần Thị Tuyết Ngân","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"20365","n":"Đỗ Ngọc Bích","s":"109 TQH","v":"Skinner","l":"L1"},{"i":"21257","n":"Hà Quang Khải","s":"109 TQH / 116 TK","v":"Stylist","l":"ST L1C"},{"i":"7312","n":"Nguyễn Thị Yến","s":"109 TQH / 116 TK","v":"Skinner","l":"L1"},{"i":"5825","n":"Nguyễn Văn Quân","s":"109 TQH / 116 TK","v":"Stylist","l":"L1"},{"i":"21250","n":"Tống Duy Hoạt","s":"109 TQH / 116 TK","v":"Stylist","l":"ST L1C"},{"i":"16036","n":"Đinh Thành Công","s":"109 TQH / 116 TK","v":"Stylist","l":"L1"},{"i":"400","n":"Đỗ Tiến Khải","s":"109 TQH / 116 TK","v":"Stylist","l":"L1"},{"i":"20847","n":"Cấn Thị Ly","s":"11 PKT","v":"Skinner","l":"SK L1C"},{"i":"8179","n":"Nguyễn Ngọc Hải","s":"11 PKT","v":"Stylist","l":"L2"},{"i":"18519","n":"Nguyễn Thanh Trúc","s":"11 PKT","v":"Skinner","l":"L1"},{"i":"20997","n":"Nguyễn Thị Hồng Hoa","s":"11 PKT","v":"Skinner","l":"L1"},{"i":"16769","n":"Nguyễn Thị Khánh Linh","s":"11 PKT","v":"Skinner","l":"L1"},{"i":"14653","n":"Nguyễn Thị Linh Tâm","s":"11 PKT","v":"Skinner","l":"L1"},{"i":"2449","n":"Nguyễn Xuân Phúc","s":"11 PKT","v":"Stylist","l":"L3"},{"i":"20749","n":"Phan Ngọc Linh","s":"11 PKT","v":"Stylist","l":"L1"},{"i":"21328","n":"Trần Thị Linh","s":"11 PKT","v":"Skinner","l":"SK L1C"},{"i":"14271","n":"Vũ Văn Anh","s":"11 PKT","v":"Stylist","l":"L1"},{"i":"21334","n":"hoa.supkn","s":"11 PKT","v":"Supporter","l":"L1"},{"i":"20486","n":"sup.kn77","s":"11 PKT","v":"Supporter","l":"L1"},{"i":"21358","n":"Kim Nguyên SUP","s":"113 THD AG","v":"Supporter","l":"L2"},{"i":"14202","n":"Lê Thị Hồng Nhi","s":"113 THD AG","v":"Skinner","l":"L1"},{"i":"19013","n":"Lương Thị Kim Nguyên","s":"113 THD AG","v":"Skinner","l":"L1"},{"i":"20222","n":"Mai Thị Kim Xuyến","s":"113 THD AG","v":"Skinner","l":"L1"},{"i":"20453","n":"Nguyễn Thị Cẩm Tiên","s":"113 THD AG","v":"Skinner","l":"L1"},{"i":"21004","n":"Nguyễn Thị Mỹ Duyên","s":"113 THD AG","v":"Skinner","l":"L1"},{"i":"15075","n":"Phan Thanh Tuấn","s":"113 THD AG","v":"Stylist","l":"L2"},{"i":"18174","n":"Phan Văn Duy Thanh","s":"113 THD AG","v":"Stylist","l":"L1"},{"i":"20994","n":"Phạm Công Quang Vinh","s":"113 THD AG","v":"Stylist","l":"L1"},{"i":"21313","n":"Trương Văn Ngà","s":"113 THD AG","v":"Stylist","l":"L1"},{"i":"11079","n":"Lê Thị Hiền","s":"1146 KVC","v":"Skinner","l":"L2"},{"i":"20133","n":"Nguyễn Thị Hoài Thương CTV Cuối tuần","s":"1146 KVC","v":"Skinner","l":"LCTV SK"},{"i":"21188","n":"Nguyễn Thị Mỹ Diễm","s":"1146 KVC","v":"Skinner","l":"SK L1C"},{"i":"12240","n":"Thái Văn Sỷ","s":"1146 KVC","v":"Stylist","l":"L2"},{"i":"16590","n":"Trang Thanh Duyên","s":"1146 KVC","v":"Supporter","l":"L1"},{"i":"18649","n":"Trương Phi Hà","s":"1146 KVC","v":"Stylist","l":"L2"},{"i":"16102","n":"Trần Ngọc Hiếu","s":"1146 KVC","v":"Stylist","l":"L2"},{"i":"10639","n":"Trần Thông Tính","s":"1146 KVC","v":"Stylist","l":"L3"},{"i":"20039","n":"sup.hien98","s":"1146 KVC","v":"Supporter","l":"L1"},{"i":"16549","n":"Nguyễn Trúc Anh","s":"1146 KVC / 29 HB","v":"Skinner","l":"L1"},{"i":"5760","n":"Hoàng Thị Minh Huế","s":"116 TK","v":"Skinner","l":"L1"},{"i":"5230","n":"Hoàng Trường Huy","s":"116 TK","v":"Stylist","l":"L3"},{"i":"5122","n":"Hà Thị Nương","s":"116 TK","v":"Supporter","l":"L2"},{"i":"610","n":"Lê Văn Hưng","s":"116 TK","v":"Stylist","l":"L4"},{"i":"6804","n":"Lương Anh Khánh","s":"116 TK","v":"Stylist","l":"L2"},{"i":"17243","n":"Mai Thị Trà My","s":"116 TK","v":"Skinner","l":"L1"},{"i":"6248","n":"Nguyễn Thị Phương","s":"116 TK","v":"Skinner","l":"L1"},{"i":"4125","n":"Nguyễn Trung Đức","s":"116 TK","v":"Stylist","l":"L2"},{"i":"6546","n":"Phạm Thị Hoa","s":"116 TK","v":"Skinner","l":"L1"},{"i":"9840","n":"Phạm Thị Hải Anh","s":"116 TK","v":"Skinner","l":"L2"},{"i":"21331","n":"Phạm Thị Thuỳ Linh","s":"116 TK","v":"Skinner","l":"SK L1C"},{"i":"9280","n":"Trần Thuý Hậu","s":"116 TK","v":"Supporter","l":"L2"},{"i":"14356","n":"Trần Thị Thuý","s":"116 TK","v":"Skinner","l":"L1"},{"i":"15120","n":"Vi Thị Hải CTV Cuối tuần","s":"116 TK","v":"Skinner","l":"LCTV SK"},{"i":"17035","n":"Đinh Thị Bích Ánh","s":"116 TK","v":"Skinner","l":"L1"},{"i":"17034","n":"Đinh Thị Thùy Chinh","s":"116 TK","v":"Skinner","l":"L1"},{"i":"3301","n":"Đặng Thị Ngọc Anh","s":"116 TK","v":"Supporter","l":"L2"},{"i":"20893","n":"Nguyễn Thị Thanh Hiền","s":"116 TK / 62 LH","v":"Skinner","l":"SK L1C"},{"i":"20043","n":"Lâm Thị Cẩm Linh CTV","s":"116 TK / 90 NH","v":"Skinner","l":"LCTV SK"},{"i":"13903","n":"Bùi Thị Bão Nhi","s":"1180 QT","v":"Skinner","l":"L2"},{"i":"3960","n":"Nguyễn Sanh","s":"1180 QT","v":"Stylist","l":"L3"},{"i":"18628","n":"Nguyễn Võ Phương Anh","s":"1180 QT","v":"Skinner","l":"L1"},{"i":"3064","n":"Nguyễn Văn Hữu Nghị","s":"1180 QT","v":"Stylist","l":"L1"},{"i":"17788","n":"Nguyễn Xuân Toàn","s":"1180 QT","v":"Stylist","l":"L2"},{"i":"20271","n":"Ni Khả Tú","s":"1180 QT","v":"Skinner","l":"L1"},{"i":"7785","n":"Phan Vĩnh Thành","s":"1180 QT","v":"Stylist","l":"L2"},{"i":"21177","n":"Phạm Thị Thảo","s":"1180 QT","v":"Skinner","l":"SK L1A"},{"i":"13419","n":"Trương Thị Thuỳ Dương","s":"1180 QT","v":"Supporter","l":"L2"},{"i":"18312","n":"Trần Thị Kim Loan","s":"1180 QT","v":"Skinner","l":"L1"},{"i":"1960","n":"Tăng Xuân Thiệu","s":"1180 QT","v":"Stylist","l":"L2"},{"i":"17662","n":"Võ Thị Hồng","s":"1180 QT","v":"Skinner","l":"L2"},{"i":"12995","n":"Võ Đức","s":"1180 QT","v":"Stylist","l":"L2"},{"i":"19921","n":"duong.sup","s":"1180 QT","v":"Skinner","l":"L1"},{"i":"11102","n":"Hà Linh Phượng","s":"1180 QT / 12 LDT","v":"Supporter","l":"L2"},{"i":"19171","n":"Trần Thị Chúc Linh","s":"1180 QT / 12 LDT","v":"Supporter","l":"L2"},{"i":"13081","n":"La Hoàng Tấn Lộc","s":"12 LDT","v":"Stylist","l":"L1"},{"i":"20639","n":"Mai Văn Công CTV","s":"12 LDT","v":"Stylist","l":"L1"},{"i":"651","n":"NGUYỄN VĂN LÂM","s":"12 LDT","v":"Stylist","l":"L3"},{"i":"10345","n":"Nguyễn Phan Như Ngọc","s":"12 LDT","v":"Skinner","l":"L1"},{"i":"16479","n":"Nguyễn Thị Hằng Nga","s":"12 LDT","v":"Skinner","l":"L2"},{"i":"21015","n":"Nguyễn Thị Linh","s":"12 LDT","v":"Skinner","l":"L1"},{"i":"9323","n":"Thái Thành Công","s":"12 LDT","v":"Stylist","l":"L3"},{"i":"20377","n":"Tiền Anh Thư","s":"12 LDT","v":"Skinner","l":"L2"},{"i":"19438","n":"Trần Thị Kim Anh","s":"12 LDT","v":"Skinner","l":"L1"},{"i":"21311","n":"Trần Thị Mỹ Tiên","s":"12 LDT","v":"Skinner","l":"L1"},{"i":"21178","n":"Võ Thị Trinh","s":"12 LDT","v":"Skinner","l":"SK L1A"},{"i":"14114","n":"Vũ Văn Quang","s":"12 LDT","v":"Stylist","l":"L2"},{"i":"7495","n":"Đặng Minh Hiếu","s":"12 LDT","v":"Stylist","l":"L1"},{"i":"20818","n":"Nguyễn Khánh Duy","s":"12 LDT / 76 PVH","v":"Stylist","l":"L1"},{"i":"18624","n":"Diệp Trúc Quỳnh","s":"1371 PVT","v":"Skinner","l":"L2"},{"i":"19828","n":"Hoàng Trần Phong","s":"1371 PVT","v":"Stylist","l":"L1"},{"i":"10304","n":"Ngô Mỹ Xuyến","s":"1371 PVT","v":"Skinner","l":"L1"},{"i":"3723","n":"Nguyễn Mạnh Cương","s":"1371 PVT","v":"Stylist","l":"L2"},{"i":"16195","n":"Nguyễn Như Ngọc","s":"1371 PVT","v":"Skinner","l":"L1"},{"i":"9787","n":"Nguyễn Thanh Trúc","s":"1371 PVT","v":"Skinner","l":"L1"},{"i":"3444","n":"Phan Anh Tuấn","s":"1371 PVT","v":"Stylist","l":"L2"},{"i":"9758","n":"Trịnh Văn Sơn","s":"1371 PVT","v":"Stylist","l":"L2"},{"i":"21362","n":"Võ Huyền Trân","s":"1371 PVT","v":"Skinner","l":"L2"},{"i":"10113","n":"Huỳnh Thanh Điền","s":"145 THT","v":"Stylist","l":"L2"},{"i":"12779","n":"Huỳnh Thị Kim My","s":"145 THT","v":"Skinner","l":"L1"},{"i":"19503","n":"Lê Công Bằng","s":"145 THT","v":"Stylist","l":"ST L1C"},{"i":"12374","n":"Nguyễn Hoàng Duy","s":"145 THT","v":"Stylist","l":"L2"},{"i":"13502","n":"Nguyễn Lê Diệp Linh","s":"145 THT","v":"Skinner","l":"L1"},{"i":"12991","n":"Nguyễn Minh Khoa","s":"145 THT","v":"Stylist","l":"L1"},{"i":"9405","n":"Nguyễn Thị Hồng Ngân","s":"145 THT","v":"Supporter","l":"L2"},{"i":"858","n":"Nguyễn Thị Mỹ Hường","s":"145 THT","v":"Skinner","l":"L1"},{"i":"20801","n":"Nguyễn Thị Như Ý","s":"145 THT","v":"Skinner","l":"L1"},{"i":"20040","n":"Nguyễn Thị Yến Vy","s":"145 THT","v":"Skinner","l":"SK L1A"},{"i":"1486","n":"Nguyễn Tiến Đức","s":"145 THT","v":"Stylist","l":"L1"},{"i":"7568","n":"Nguyễn Tấn Khương","s":"145 THT","v":"Stylist","l":"L2"},{"i":"17594","n":"Nguyễn Văn Sơn NQ","s":"145 THT","v":"Supporter","l":"L1"},{"i":"2650","n":"Nguyễn Văn Tú","s":"145 THT","v":"Stylist","l":"L3"},{"i":"7193","n":"Thạch Thi Sa RemCTV","s":"145 THT","v":"Skinner","l":"L1"},{"i":"9601","n":"Trang Thị Hồng An","s":"145 THT","v":"Skinner","l":"L3"},{"i":"18104","n":"Trương Thị Kim Tuyền","s":"145 THT","v":"Skinner","l":"L1"},{"i":"10581","n":"Trần Xuân Yên","s":"145 THT","v":"Stylist","l":"L2"},{"i":"14915","n":"Tăng Chí Tiếng","s":"145 THT","v":"Stylist","l":"L1"},{"i":"5249","n":"Tăng Gia Hoà","s":"145 THT","v":"Stylist","l":"L2"},{"i":"17759","n":"Võ Hoàng Đệ","s":"145 THT","v":"Stylist","l":"L1"},{"i":"20757","n":"Võ Lê Hà Phương","s":"145 THT","v":"Skinner","l":"L1"},{"i":"19780","n":"Đoàn Thị Kim Anh","s":"145 THT","v":"Skinner","l":"L1"},{"i":"12821","n":"Lưu Thị Thuý Duy","s":"145 THT / 575 AC","v":"Skinner","l":"L1"},{"i":"12059","n":"Trần Huỳnh Hồng Nhung","s":"145 THT / 575 AC","v":"Skinner","l":"L1"},{"i":"19424","n":"Lưu Ngọc Châm","s":"148 TD","v":"Skinner","l":"L1"},{"i":"14640","n":"Nguyễn Thuỳ Linh","s":"148 TD","v":"Skinner","l":"L1"},{"i":"18978","n":"Phan Thị Mai Anh CTV Cuối Tuần","s":"148 TD","v":"Skinner","l":"LCTV SK"},{"i":"7112","n":"Phạm Thị Duyên","s":"148 TD","v":"Supporter","l":"L2"},{"i":"17898","n":"Trần Đình Đức","s":"148 TD","v":"Stylist","l":"L1"},{"i":"21303","n":"Trịnh Hoài Anh","s":"148 TD","v":"Skinner","l":"L1"},{"i":"6959","n":"Vũ Văn Tuyên","s":"148 TD","v":"Stylist","l":"L2"},{"i":"21215","n":"linh.sup09","s":"148 TD","v":"Supporter","l":"L1"},{"i":"13741","n":"Lê Công Sỹ","s":"148 TD / 173 TN","v":"Stylist","l":"L1"},{"i":"1703","n":"Đoàn Long Khánh","s":"148 TD / 173 TN","v":"Stylist","l":"L2"},{"i":"21267","n":"Đỗ Bảo Trung","s":"148 TD / 346 KT","v":"Stylist","l":"L1"},{"i":"20313","n":"Nguyễn Ngọc Sơn","s":"148 TD / 39 HBT","v":"Stylist","l":"L1"},{"i":"4887","n":"Ngô Doãn Hiếu","s":"148 TD / 50BT4 NPC LD","v":"Stylist","l":"L1"},{"i":"18636","n":"Bùi Thị Bình","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"15254","n":"Dương Đức Huy","s":"168 NVC","v":"Stylist","l":"L1"},{"i":"10369","n":"Khổng Văn Duy","s":"168 NVC","v":"Stylist","l":"L1"},{"i":"193","n":"Lê Thị Thùy Dương","s":"168 NVC","v":"Supporter","l":"L1"},{"i":"10368","n":"Mai Văn Chưởng","s":"168 NVC","v":"Stylist","l":"L1"},{"i":"1607","n":"Nguyễn Cảnh Thái","s":"168 NVC","v":"Stylist","l":"L3"},{"i":"9473","n":"Nguyễn Phương Thảo","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"13977","n":"Nguyễn Sơn Tùng","s":"168 NVC","v":"Stylist","l":"L2"},{"i":"14231","n":"Nguyễn Thị Chinh","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"14251","n":"Nguyễn Thị Hiếu","s":"168 NVC","v":"Skinner","l":"L2"},{"i":"19643","n":"Nguyễn Thị Hương Giang","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"1909","n":"Nguyễn Thị Thêu","s":"168 NVC","v":"Skinner","l":"L2"},{"i":"17748","n":"Nguyễn Thị Uyên","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"19272","n":"Nguyễn Thị Vân Anh","s":"168 NVC","v":"Supporter","l":"L1"},{"i":"14100","n":"Nguyễn Việt Hoàng","s":"168 NVC","v":"Stylist","l":"L2"},{"i":"4134","n":"Nguyễn Đồng Nhật Minh","s":"168 NVC","v":"Stylist","l":"L1"},{"i":"11209","n":"Ninh Công Lâm","s":"168 NVC","v":"Stylist","l":"L1"},{"i":"11287","n":"Vũ Hải Linh","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"19912","n":"v.anh","s":"168 NVC","v":"Skinner","l":"L1"},{"i":"19420","n":"Giang Xuân Tú","s":"173 TN","v":"Stylist","l":"L1"},{"i":"17158","n":"Lê Thị Anh","s":"173 TN","v":"Skinner","l":"L1"},{"i":"8043","n":"Nguyễn Hữu Hoàng","s":"173 TN","v":"Stylist","l":"L3"},{"i":"12767","n":"Nguyễn Minh Quang","s":"173 TN","v":"Stylist","l":"L1"},{"i":"14289","n":"Ngô Thị Nhung","s":"173 TN","v":"Skinner","l":"L1"},{"i":"13106","n":"Phạm Thị Trí","s":"173 TN","v":"Skinner","l":"L1"},{"i":"11954","n":"Thiều Thị Linh Chi","s":"173 TN","v":"Supporter","l":"L1"},{"i":"21349","n":"Trịnh Thu Hiền","s":"173 TN","v":"Skinner","l":"L1"},{"i":"5948","n":"Tô Huyền Trang","s":"173 TN","v":"Supporter","l":"L1"},{"i":"20628","n":"lan.sk99","s":"173 TN","v":"Skinner","l":"L1"},{"i":"18516","n":"Đỗ Thị Lan Anh","s":"173 TN","v":"Skinner","l":"L1"},{"i":"12164","n":"Lê Nguyễn Phương Trinh","s":"186 DTH","v":"Skinner","l":"L1"},{"i":"7111","n":"Mã Thanh Phong","s":"186 DTH","v":"Supporter","l":"L2"},{"i":"940","n":"Mạc Anh Tuyên","s":"186 DTH","v":"Stylist","l":"L2"},{"i":"10140","n":"Nguyễn Hùng Mạnh","s":"186 DTH","v":"Stylist","l":"L2"},{"i":"15123","n":"Nguyễn Châu Nhật Lam","s":"186 DTH","v":"Skinner","l":"L2"},{"i":"20502","n":"Nguyễn Chí Thiện","s":"186 DTH","v":"Stylist","l":"L1"},{"i":"9708","n":"Nguyễn Diệu Hiền","s":"186 DTH","v":"Skinner","l":"L1"},{"i":"13015","n":"Nguyễn Nhựt Bình","s":"186 DTH","v":"Stylist","l":"L1"},{"i":"13073","n":"Nguyễn Thị Hạnh","s":"186 DTH","v":"Skinner","l":"L1"},{"i":"1716","n":"Nguyễn Văn Tấn Đạt","s":"186 DTH","v":"Stylist","l":"L3"},{"i":"12225","n":"Ngô Huỳnh Phong Phú","s":"186 DTH","v":"Stylist","l":"L1"},{"i":"11722","n":"Phạm Ngọc Trinh","s":"186 DTH","v":"Skinner","l":"L1"},{"i":"18541","n":"Trần Quang Linh","s":"186 DTH","v":"Stylist","l":"L1"},{"i":"17794","n":"Võ Phương Nhi","s":"186 DTH","v":"Skinner","l":"L1"},{"i":"4120","n":"Đoàn Văn Sơn","s":"186 DTH","v":"Stylist","l":"L3"},{"i":"3965","n":"Đồng Thị Thanh Tuyền","s":"186 DTH","v":"Skinner","l":"L1"},{"i":"20456","n":"Bùi Bảo Ngọc","s":"186 QT","v":"Stylist","l":"L1"},{"i":"20614","n":"Nguyễn Thị Huệ","s":"186 QT","v":"Skinner","l":"L1"},{"i":"5921","n":"Nguyễn Viết Văn","s":"186 QT","v":"Stylist","l":"L2"},{"i":"20658","n":"Nguyễn Văn Mạnh","s":"186 QT","v":"Stylist","l":"L1"},{"i":"13826","n":"Phạm Thị Kiều Thơm","s":"186 QT","v":"Skinner","l":"L1"},{"i":"19274","n":"thom.knsup","s":"186 QT","v":"Supporter","l":"L2"},{"i":"21288","n":"Đỗ Thị Linh Tâm CTV","s":"186 QT","v":"Skinner","l":"LCTV SK"},{"i":"20762","n":"Lê Huỳnh Diệu My","s":"190 HB","v":"Skinner","l":"L1"},{"i":"21125","n":"Lê Triệu Vy","s":"190 HB","v":"Skinner","l":"L1"},{"i":"8851","n":"Lưu Huỳnh Đức","s":"190 HB","v":"Stylist","l":"L2"},{"i":"1813","n":"Nguyễn Hoàng Anh Tuấn","s":"190 HB","v":"Stylist","l":"L1"},{"i":"21272","n":"Nguyễn Lê Phương Nguyên","s":"190 HB","v":"Skinner","l":"L1"},{"i":"13583","n":"Nguyễn Thị Hồng Ngọc","s":"190 HB","v":"Skinner","l":"L1"},{"i":"18963","n":"Nguyễn Thị Kim Ngân","s":"190 HB","v":"Supporter","l":"L1"},{"i":"12206","n":"Trần Duy Thông","s":"190 HB","v":"Stylist","l":"L1"},{"i":"21146","n":"Trần Minh Hùng","s":"190 HB","v":"Stylist","l":"L1"},{"i":"19722","n":"Trần Minh Thuận","s":"190 HB","v":"Stylist","l":"L1"},{"i":"21262","n":"Trần Phước Thiện","s":"190 HB","v":"Skinner","l":"L1"},{"i":"7304","n":"Từ Thị Mỹ Ánh","s":"190 HB","v":"Skinner","l":"L2"},{"i":"10098","n":"Bùi Thanh Long","s":"202 DC","v":"Stylist","l":"L3"},{"i":"12977","n":"Hồ Sỹ Khánh","s":"202 DC","v":"Stylist","l":"L2"},{"i":"21321","n":"Lê Phạm Trà Giang","s":"202 DC","v":"Skinner","l":"L1"},{"i":"19229","n":"Nguyễn Thu Phương","s":"202 DC","v":"Supporter","l":"L1"},{"i":"21209","n":"Nguyễn Thị Kim Oanh","s":"202 DC","v":"Skinner","l":"L1"},{"i":"5015","n":"Nguyễn Thị Ngần","s":"202 DC","v":"Skinner","l":"L2"},{"i":"21237","n":"Ngô Bảo Hân NQ","s":"202 DC","v":"Stylist","l":"L1"},{"i":"13760","n":"Phạm Ngọc Lan Anh","s":"202 DC","v":"Skinner","l":"L1"},{"i":"13443","n":"Thừa Thị Nguyệt","s":"202 DC","v":"Skinner","l":"L2"},{"i":"16003","n":"Triệu Khánh Huyền","s":"202 DC","v":"Supporter","l":"L1"},{"i":"182","n":"Trần Văn Công","s":"202 DC","v":"Stylist","l":"L3"},{"i":"18468","n":"Trần Văn Quang","s":"202 DC","v":"Stylist","l":"L1"},{"i":"20885","n":"Hoàng Thị Thuỳ Trâm","s":"202 DC / 264 LLQ","v":"Skinner","l":"L1"},{"i":"20882","n":"Lò Văn Việt","s":"202 DC / 264 LLQ","v":"Stylist","l":"L1"},{"i":"13511","n":"Nguyễn Thị Thùy Linh","s":"202 DC / 264 LLQ","v":"Skinner","l":"L1"},{"i":"14187","n":"Bạch Xuân Thiện","s":"236 DBT","v":"Stylist","l":"L3"},{"i":"6506","n":"Châu Bảo Vinh","s":"236 DBT","v":"Stylist","l":"L1"},{"i":"21129","n":"Huỳnh Thị Kim Mơ","s":"236 DBT","v":"Stylist","l":"L1"},{"i":"11521","n":"Hồ Lê Ngọc Thông","s":"236 DBT","v":"Stylist","l":"L2"},{"i":"16663","n":"Lê Đình Khôi","s":"236 DBT","v":"Stylist","l":"L1"},{"i":"20572","n":"Nguyễn Thị Ngọc Huyền","s":"236 DBT","v":"Supporter","l":"L2"},{"i":"21352","n":"Nguyễn Thị Tuyết Nhung","s":"236 DBT","v":"Skinner","l":"L1"},{"i":"20849","n":"Nguyễn Thị Tường Vi","s":"236 DBT","v":"Skinner","l":"L2"},{"i":"21276","n":"Nguyễn Trọng Nghĩa","s":"236 DBT","v":"Stylist","l":"L1"},{"i":"20770","n":"Ngô Gia Huy","s":"236 DBT","v":"Stylist","l":"L1"},{"i":"21308","n":"Phạm Thị Thu Trinh","s":"236 DBT","v":"Skinner","l":"L1"},{"i":"21205","n":"Phạm Yên Trình","s":"236 DBT","v":"Supporter","l":"L1"},{"i":"20986","n":"Trần Thị Kim Uyên","s":"236 DBT","v":"Skinner","l":"L1"},{"i":"21245","n":"Võ Thị Mỹ Ly","s":"236 DBT","v":"Skinner","l":"L1"},{"i":"21265","n":"Vũ Thị Hạnh","s":"236 DBT","v":"Skinner","l":"L1"},{"i":"20686","n":"huyen.sup00","s":"236 DBT","v":"Skinner","l":"L2"},{"i":"20860","n":"Bùi Thị Mỹ Tâm","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"10072","n":"Cao Thành Đạt","s":"237 NTT","v":"Stylist","l":"L2"},{"i":"4313","n":"Hồ Chí Đại","s":"237 NTT","v":"Stylist","l":"L1"},{"i":"20321","n":"Lâm Quốc Tuấn","s":"237 NTT","v":"Stylist","l":"L1"},{"i":"8555","n":"Lê Hữu Hậu","s":"237 NTT","v":"Supporter","l":"L1"},{"i":"19331","n":"Lê Thị Hồng Nhung","s":"237 NTT","v":"Skinner","l":"L2"},{"i":"3086","n":"Lê Văn Hoài","s":"237 NTT","v":"Stylist","l":"L3"},{"i":"19670","n":"Nguyễn Ngọc Mai Thanh","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"11843","n":"Nguyễn Phan Thảo My","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"20958","n":"Nguyễn Thị Huỳnh Như","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"19255","n":"Nguyễn Thị Minh Thư","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"15706","n":"Nguyễn Thị Phú Quý","s":"237 NTT","v":"Skinner","l":"L2"},{"i":"21186","n":"Nguyễn Thị Thuỳ Dương","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"7548","n":"Nguyễn Thụy Thùy Trang","s":"237 NTT","v":"Supporter","l":"L1"},{"i":"9629","n":"Nguyễn Trần Thanh Trúc","s":"237 NTT","v":"Supporter","l":"L2"},{"i":"15715","n":"Nguyễn Trần Thanh Trúc SK","s":"237 NTT","v":"Skinner","l":"L2"},{"i":"5417","n":"Phạm Hoàng Thái","s":"237 NTT","v":"Stylist","l":"L3"},{"i":"12087","n":"Trương Thị Thảo Lan","s":"237 NTT","v":"Supporter","l":"L2"},{"i":"3451","n":"Trần Vĩnh Long","s":"237 NTT","v":"Stylist","l":"L1"},{"i":"8589","n":"Võ Thanh Toàn","s":"237 NTT","v":"Stylist","l":"L1"},{"i":"9140","n":"Vũ Hải Hà","s":"237 NTT","v":"Stylist","l":"L2"},{"i":"17780","n":"Võ Ngọc Thy Nhã","s":"237 NTT","v":"Skinner","l":"L2"},{"i":"4627","n":"Võ Thị Thu Ngân","s":"237 NTT","v":"Skinner","l":"L3"},{"i":"20833","n":"Vũ Trần Anh Thư","s":"237 NTT","v":"Skinner","l":"L1"},{"i":"8791","n":"Đặng Chánh Nhân","s":"237 NTT","v":"Stylist","l":"L2"},{"i":"3825","n":"Đặng Khắc Thanh","s":"237 NTT","v":"Stylist","l":"L1"},{"i":"13683","n":"Bùi Thị Hằng","s":"25 TD","v":"Skinner","l":"L1"},{"i":"7299","n":"Hoàng Xuân Trường","s":"25 TD","v":"Stylist","l":"L2"},{"i":"12277","n":"Huỳnh Kiều Như","s":"25 TD","v":"Skinner","l":"L1"},{"i":"4042","n":"Huỳnh Thanh Tuấn","s":"25 TD","v":"Stylist","l":"L3"},{"i":"11761","n":"Huỳnh Thị Khánh Vân","s":"25 TD","v":"Skinner","l":"L1"},{"i":"20537","n":"Kiêm Thị Huỳnh","s":"25 TD","v":"Skinner","l":"L1"},{"i":"11998","n":"Lê Hoàng Phúc","s":"25 TD","v":"Stylist","l":"L2"},{"i":"8010","n":"Lê Văn Sang","s":"25 TD","v":"Stylist","l":"L1"},{"i":"5264","n":"Nguyễn Hoàng Vũ","s":"25 TD","v":"Stylist","l":"L1"},{"i":"16303","n":"Nguyễn Hà Phương","s":"25 TD","v":"Skinner","l":"L1"},{"i":"19605","n":"Nguyễn Nhật Kim Ngân","s":"25 TD","v":"Skinner","l":"L2"},{"i":"11326","n":"Nguyễn Thị Mỹ Giang","s":"25 TD","v":"Supporter","l":"L2"},{"i":"21014","n":"Phạm Ngọc Lợi","s":"25 TD","v":"Stylist","l":"L1"},{"i":"14745","n":"Phạm Ngọc Xuyên","s":"25 TD","v":"Skinner","l":"L2"},{"i":"11975","n":"Phạm Thị Yến Nhi","s":"25 TD","v":"Skinner","l":"L2"},{"i":"10800","n":"Phạm Trần Công Hậu","s":"25 TD","v":"Stylist","l":"L2"},{"i":"19569","n":"Thạch Thị Thanh","s":"25 TD","v":"Skinner","l":"L1"},{"i":"9712","n":"Trương Thanh Sơn","s":"25 TD","v":"Stylist","l":"L3"},{"i":"11952","n":"Trần Mỹ Linh","s":"25 TD","v":"Supporter","l":"L2"},{"i":"11820","n":"Trần Ngọc Bảo Long","s":"25 TD","v":"Stylist","l":"L1"},{"i":"20467","n":"Trần Thị Bích Nhi","s":"25 TD","v":"Skinner","l":"L1"},{"i":"8999","n":"Bùi Danh Chính","s":"255 NAN","v":"Stylist","l":"L2"},{"i":"11733","n":"Cao Hoàng Giang","s":"255 NAN","v":"Stylist","l":"L2"},{"i":"8699","n":"Lê Ngọc Hiếu","s":"255 NAN","v":"Stylist","l":"L3"},{"i":"20991","n":"Nguyễn Huy Bằng","s":"255 NAN","v":"Stylist","l":"L1"},{"i":"2743","n":"Nguyễn Kim Ngân","s":"255 NAN","v":"Skinner","l":"L1"},{"i":"20409","n":"Nguyễn Nhật Minh NQ","s":"255 NAN","v":"Skinner","l":"L2"},{"i":"16453","n":"Nguyễn Phúc Vinh","s":"255 NAN","v":"Stylist","l":"L1"},{"i":"10976","n":"Nguyễn Phước Ty NQ","s":"255 NAN","v":"Stylist","l":"L2"},{"i":"19012","n":"Nguyễn Thảo Vy","s":"255 NAN","v":"Skinner","l":"L1"},{"i":"19516","n":"Nguyễn Thị Quỳnh Như","s":"255 NAN","v":"Skinner","l":"L1"},{"i":"21353","n":"Nguyễn Thị Tú My","s":"255 NAN","v":"Skinner","l":"L1"},{"i":"9658","n":"Phan Châu Tấn Cường","s":"255 NAN","v":"Supporter","l":"L1"},{"i":"9992","n":"Phạm Thị Thúy Duy","s":"255 NAN","v":"Skinner","l":"L1"},{"i":"18848","n":"Võ Thị Tố Nga","s":"255 NAN","v":"Stylist","l":"L2"},{"i":"20339","n":"Vũ Thị Hiền","s":"255 NAN","v":"Skinner","l":"L1"},{"i":"5693","n":"Đoàn Thành Đạt","s":"255 NAN","v":"Stylist","l":"L3"},{"i":"20265","n":"Nguyễn Thị Ngọc Nhi","s":"255 NAN / 29 HB","v":"Skinner","l":"L1"},{"i":"17588","n":"Bùi Thị Ánh Ngọc","s":"264 LLQ","v":"Skinner","l":"L1"},{"i":"15252","n":"Nguyễn Hoàng Dương","s":"264 LLQ","v":"Supporter","l":"L1"},{"i":"1910","n":"Nguyễn Mỹ Linh","s":"264 LLQ","v":"Skinner","l":"L1"},{"i":"21290","n":"Nguyễn Phương Linh","s":"264 LLQ","v":"Skinner","l":"L1"},{"i":"10830","n":"Nguyễn Thị Hồng Duyên","s":"264 LLQ","v":"Skinner","l":"L2"},{"i":"15061","n":"Nguyễn Tiến Hiếu CTV Cuối Tuần","s":"264 LLQ","v":"Stylist","l":"LCTV ST"},{"i":"2751","n":"Nguyễn Tiến Hiển","s":"264 LLQ","v":"Stylist","l":"L2"},{"i":"11271","n":"Phạm Thanh Tú","s":"264 LLQ","v":"Supporter","l":"L1"},{"i":"18707","n":"Quách Tùng Dương","s":"264 LLQ","v":"Stylist","l":"L1"},{"i":"21273","n":"Trần Quốc Huy","s":"264 LLQ","v":"Stylist","l":"L1"},{"i":"8222","n":"Trần Xuân Tiến","s":"264 LLQ","v":"Stylist","l":"L1"},{"i":"10318","n":"Bùi Gia Hạo","s":"29 HB","v":"Stylist","l":"L3"},{"i":"20862","n":"Huỳnh Thị Ngọc Ý NQ","s":"29 HB","v":"Skinner","l":"L1"},{"i":"10704","n":"Lê Nguyễn Minh Duy","s":"29 HB","v":"Stylist","l":"L2"},{"i":"20725","n":"Lê Thị Mỹ Duyên","s":"29 HB","v":"Skinner","l":"L1"},{"i":"4857","n":"Nguyễn Anh Tú","s":"29 HB","v":"Stylist","l":"L2"},{"i":"18481","n":"Nguyễn Sơn Tường Vân","s":"29 HB","v":"Skinner","l":"L2"},{"i":"20960","n":"Nguyễn Tấn Kiệt","s":"29 HB","v":"Stylist","l":"L1"},{"i":"1798","n":"Phan Thanh Hùng","s":"29 HB","v":"Stylist","l":"L3"},{"i":"21291","n":"Phan Thị Thu Ngân","s":"29 HB","v":"Skinner","l":"L1"},{"i":"21275","n":"Trương Thị Quỳnh Hương","s":"29 HB","v":"Supporter","l":"L1"},{"i":"8455","n":"Trần Ngọc Duy Khanh","s":"29 HB","v":"Stylist","l":"L1"},{"i":"20123","n":"Trần Thị Vân Anh","s":"29 HB","v":"Skinner","l":"L1"},{"i":"14261","n":"Vy Thị Vân","s":"29 HB","v":"Skinner","l":"L1"},{"i":"16113","n":"Võ Văn Nhật","s":"29 HB","v":"Stylist","l":"L2"},{"i":"19997","n":"Huỳnh Thị Phương Thảo","s":"29 HB / 255 NAN","v":"Skinner","l":"L1"},{"i":"20501","n":"Hoàng Ngọc Đạt","s":"290 QT TH","v":"Stylist","l":"L1"},{"i":"17591","n":"Hoàng Thị Linh","s":"290 QT TH","v":"Skinner","l":"L2"},{"i":"4451","n":"Lê Trọng Trường","s":"290 QT TH","v":"Stylist","l":"L2"},{"i":"5637","n":"Mã Phi Hùng","s":"290 QT TH","v":"Stylist","l":"L2"},{"i":"18511","n":"Nguyễn Như Quỳnh","s":"290 QT TH","v":"Skinner","l":"L2"},{"i":"13782","n":"Nguyễn Văn Tiến","s":"290 QT TH","v":"Stylist","l":"L2"},{"i":"16100","n":"Phạm Thị Giang Linh","s":"290 QT TH","v":"Supporter","l":"L1"},{"i":"8595","n":"Uông Bội Linh","s":"290 QT TH","v":"Skinner","l":"L1"},{"i":"17730","n":"linh.knsup","s":"290 QT TH","v":"Skinner","l":"L1"},{"i":"19378","n":"Lê Thị Vân Sinh","s":"290 QT TH / 80 TP TH","v":"Supporter","l":"L1"},{"i":"11752","n":"Ngô Thị Quỳnh","s":"290 QT TH / 80 TP TH","v":"Skinner","l":"L1"},{"i":"13468","n":"Dương Văn Mạnh","s":"304 NT TH","v":"Stylist","l":"L3"},{"i":"20569","n":"Lê Hoài Sơn","s":"304 NT TH","v":"Stylist","l":"L1"},{"i":"20570","n":"Nguyễn Phương Linh","s":"304 NT TH","v":"Skinner","l":"L1"},{"i":"21274","n":"Nguyễn Thị Hải Yến","s":"304 NT TH","v":"Skinner","l":"L1"},{"i":"8981","n":"Nguyễn Viết Hoàng","s":"304 NT TH","v":"Stylist","l":"L2"},{"i":"20744","n":"Đỗ Thị Thuỳ Linh","s":"304 NT TH","v":"Skinner","l":"L1"},{"i":"18612","n":"Huỳnh Thị Anh Thư","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"7685","n":"Huỳnh Thị Anh Thư","s":"312 LVS","v":"Supporter","l":"L2"},{"i":"21322","n":"Huỳnh Thị Thuỳ Dung","s":"312 LVS","v":"Stylist","l":"L1"},{"i":"14274","n":"Lương Ngọc Cường","s":"312 LVS","v":"Stylist","l":"L1"},{"i":"20856","n":"Lương Thị Thảo Nhi","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"2654","n":"Nguyễn Bảo Quốc","s":"312 LVS","v":"Stylist","l":"L3"},{"i":"12107","n":"Nguyễn Hoàng Thảo","s":"312 LVS","v":"Stylist","l":"L1"},{"i":"5032","n":"Nguyễn Hửu Ân","s":"312 LVS","v":"Stylist","l":"L1"},{"i":"12887","n":"Nguyễn Quang Thành","s":"312 LVS","v":"Stylist","l":"L2"},{"i":"21359","n":"Nguyễn Thị Diểm My","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"18259","n":"Nguyễn Thị Diểm My","s":"312 LVS","v":"Supporter","l":"L1"},{"i":"5018","n":"Nguyễn Thị Diễm CTV","s":"312 LVS","v":"Skinner","l":"L2"},{"i":"19760","n":"Nguyễn Thị Huỳnh Như","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"20130","n":"Nguyễn Thị Phú Tài","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"18966","n":"Ngô Thị Chí Hương","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"11789","n":"Phan Văn Đô","s":"312 LVS","v":"Stylist","l":"L2"},{"i":"13411","n":"Trần Nguyễn Duy Tâm","s":"312 LVS","v":"Stylist","l":"L1"},{"i":"14164","n":"Trần Thị Mỹ Lan","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"19854","n":"Đinh Nguyễn Mai Uyên","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"20487","n":"Đặng Thị Mỹ Nhân","s":"312 LVS","v":"Skinner","l":"L1"},{"i":"20573","n":"Nguyễn Đặng Khánh Băng","s":"312 LVS / 708 LTT","v":"Skinner","l":"L1"},{"i":"8297","n":"Nguyễn Vân Anh","s":"32 NAT","v":"Skinner","l":"L2"},{"i":"12196","n":"Nguyễn Văn Trung","s":"32 NAT","v":"Stylist","l":"L2"},{"i":"8638","n":"Ngô Minh Hoàng","s":"32 NAT","v":"Stylist","l":"L1"},{"i":"10289","n":"Ngô Mỹ Huyền","s":"32 NAT","v":"Skinner","l":"L2"},{"i":"21139","n":"Phan Văn Mỹ","s":"32 NAT","v":"Stylist","l":"L1"},{"i":"20790","n":"Vòng Thị Vân An","s":"32 NAT","v":"Skinner","l":"L1"},{"i":"21008","n":"hien.knsk","s":"32 NAT","v":"Skinner","l":"L1"},{"i":"15042","n":"supduong","s":"32 NAT","v":"Supporter","l":"L1"},{"i":"1883","n":"Đỗ Ngọc Trinh","s":"32 NAT","v":"Stylist","l":"L3"},{"i":"19987","n":"Lâm Đình Lập","s":"341 XVNT","v":"Stylist","l":"L1"},{"i":"19752","n":"Nguyễn Thanh Huy","s":"341 XVNT","v":"Stylist","l":"L2"},{"i":"19970","n":"Nguyễn Tấn Đạt","s":"341 XVNT","v":"Stylist","l":"L1"},{"i":"11389","n":"Phan Thanh Thảo","s":"341 XVNT","v":"Stylist","l":"L1"},{"i":"21332","n":"Trần Huỳnh Bảo Ngọc","s":"341 XVNT","v":"Skinner","l":"L1"},{"i":"20118","n":"Trần Kim Ngân","s":"341 XVNT","v":"Skinner","l":"L2"},{"i":"20835","n":"Trần Ngọc Yến Nhi","s":"341 XVNT","v":"Skinner","l":"L1"},{"i":"12004","n":"Võ Khánh Duy","s":"341 XVNT","v":"Supporter","l":"L1"},{"i":"9279","n":"Bùi Thanh Phương","s":"346 KT","v":"Supporter","l":"L2"},{"i":"19840","n":"Bùi Thanh Thư","s":"346 KT","v":"Skinner","l":"L1"},{"i":"19616","n":"Bùi Thuỷ Lệ","s":"346 KT","v":"Skinner","l":"L1"},{"i":"20877","n":"Nguyễn Công Toản","s":"346 KT","v":"Stylist","l":"L1"},{"i":"21195","n":"Nguyễn Huỳnh Minh Thành","s":"346 KT","v":"Stylist","l":"L1"},{"i":"4372","n":"Nguyễn Trung Hiếu","s":"346 KT","v":"Stylist","l":"L2"},{"i":"1288","n":"Tạ Văn Kiên","s":"346 KT","v":"Stylist","l":"L2"},{"i":"12173","n":"Bùi Thị Hồng Lan","s":"346 KT / 264 LLQ","v":"Skinner","l":"L1"},{"i":"16108","n":"Trần Thị Thu Hằng","s":"346 KT / 264 LLQ","v":"Skinner","l":"L1"},{"i":"19937","n":"Lý Hồng Nhung","s":"346 KT / 39 HBT","v":"Skinner","l":"L1"},{"i":"21344","n":"Trần Yến Vy NQ","s":"346 KT / 39 HBT","v":"Skinner","l":"L1"},{"i":"7605","n":"Mai Thị Thanh Dư","s":"36 N1 BD","v":"Skinner","l":"L2"},{"i":"14010","n":"Nguyễn Phan Thúy Hiền","s":"36 N1 BD","v":"Skinner","l":"L1"},{"i":"4183","n":"Nguyễn Phương Quyên","s":"36 N1 BD","v":"Stylist","l":"L1"},{"i":"4804","n":"Nguyễn Thanh Tú","s":"36 N1 BD","v":"Supporter","l":"L1"},{"i":"2103","n":"Nguyễn Thị Ngọc Tươi","s":"36 N1 BD","v":"Supporter","l":"L2"},{"i":"11703","n":"Nguyễn Văn Thủ","s":"36 N1 BD","v":"Stylist","l":"L1"},{"i":"11736","n":"Trần Hạ Duy","s":"36 N1 BD","v":"Stylist","l":"L2"},{"i":"11743","n":"Trần Thị Trang","s":"36 N1 BD","v":"Skinner","l":"L2"},{"i":"21189","n":"Trần Thị Ái Duy","s":"36 N1 BD","v":"Skinner","l":"L2"},{"i":"10787","n":"Trần Văn Tý","s":"36 N1 BD","v":"Stylist","l":"L2"},{"i":"3820","n":"Đoái Duy Thư","s":"36 N1 BD","v":"Stylist","l":"L3"},{"i":"20826","n":"Đỗ Thuỳ Linh","s":"36 N1 BD","v":"Skinner","l":"L1"},{"i":"12846","n":"Đỗ Thị Kim Chi","s":"36 N1 BD","v":"Skinner","l":"L2"},{"i":"20291","n":"Chu Lệ Hường","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"5787","n":"Lý Văn Bắc","s":"362 NGT BN","v":"Stylist","l":"L2"},{"i":"21317","n":"Lương Thị Phượng","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"19396","n":"Nguyễn Huy Thành","s":"362 NGT BN","v":"Stylist","l":"L1"},{"i":"20280","n":"Nguyễn Hương Nhung","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"11032","n":"Nguyễn Thành Huy","s":"362 NGT BN","v":"Stylist","l":"L2"},{"i":"20973","n":"Nguyễn Thị Hạnh","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"21333","n":"Nguyễn Thị Kim Tuyến","s":"362 NGT BN","v":"Supporter","l":"LD"},{"i":"7407","n":"Nguyễn Văn Nguyên","s":"362 NGT BN","v":"Stylist","l":"L1"},{"i":"16988","n":"Nguyễn Văn Toàn","s":"362 NGT BN","v":"Stylist","l":"L1"},{"i":"21184","n":"Ngụy Thị Phúc","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"21219","n":"Phạm Thị Loan","s":"362 NGT BN","v":"Skinner","l":"SK L1C"},{"i":"20607","n":"Phạm Thị Thu Hương","s":"362 NGT BN","v":"Stylist","l":"L1"},{"i":"21243","n":"Phạm Thị Thuỷ","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"18590","n":"Phạm Văn Đức","s":"362 NGT BN","v":"Stylist","l":"L1"},{"i":"21270","n":"Trần Thị Điểm","s":"362 NGT BN","v":"Supporter","l":"LD"},{"i":"18076","n":"Vy Thị Trà Giang","s":"362 NGT BN","v":"Skinner","l":"L1"},{"i":"10477","n":"Nguyễn Như Long","s":"362 NGT BN / 4 LQD BN","v":"Stylist","l":"L1"},{"i":"4549","n":"Chu Văn Thọ","s":"363 LNQ TN","v":"Stylist","l":"L2"},{"i":"21297","n":"Diệp Thị Hương","s":"363 LNQ TN","v":"Skinner","l":"L1"},{"i":"10732","n":"Lê Hoàng Vĩ","s":"363 LNQ TN","v":"Stylist","l":"L1"},{"i":"17935","n":"Nguyễn Hoài Anh","s":"363 LNQ TN","v":"Supporter","l":"L1"},{"i":"15737","n":"Nguyễn Ngọc Huyền Trang","s":"363 LNQ TN","v":"Skinner","l":"L1"},{"i":"6336","n":"Nguyễn Thành Đạt","s":"363 LNQ TN","v":"Supporter","l":"L2"},{"i":"5675","n":"Nguyễn Tiến Ngọc","s":"363 LNQ TN","v":"Stylist","l":"L1"},{"i":"7836","n":"Ngô Thị Ngà","s":"363 LNQ TN","v":"Skinner","l":"L1"},{"i":"21315","n":"Phạm Anh Tuấn","s":"363 LNQ TN","v":"Stylist","l":"L1"},{"i":"17883","n":"Phạm Thị Thu Hương","s":"363 LNQ TN","v":"Skinner","l":"L1"},{"i":"17241","n":"Triệu Đức Thắng","s":"363 LNQ TN","v":"Stylist","l":"L1"},{"i":"18843","n":"Trương Thị Thuỳ","s":"363 LNQ TN","v":"Skinner","l":"L1"},{"i":"21236","n":"hoai.anhsk","s":"363 LNQ TN","v":"Skinner","l":"L1"},{"i":"8612","n":"Hoàng Văn Dự","s":"382 NT","v":"Stylist","l":"L1"},{"i":"5403","n":"Hoàng Thị Huyền","s":"382 NT","v":"Skinner","l":"L1"},{"i":"2849","n":"Hoàng Văn Thái","s":"382 NT","v":"Stylist","l":"L1"},{"i":"21266","n":"Lê Thị Thuỳ CTV","s":"382 NT","v":"Skinner","l":"LCTV SK"},{"i":"1028","n":"Lê Xuân Toàn","s":"382 NT","v":"Stylist","l":"L4"},{"i":"18357","n":"Lê Đình Tuấn Anh","s":"382 NT","v":"Stylist","l":"L1"},{"i":"19351","n":"Lại Thị Yến Nhi","s":"382 NT","v":"Skinner","l":"L1"},{"i":"1649","n":"Lại Văn Huân","s":"382 NT","v":"Stylist","l":"L1"},{"i":"452","n":"Nguyễn Hoàng Sơn","s":"382 NT","v":"Stylist","l":"L4"},{"i":"5500","n":"Nguyễn Kiều Oanh","s":"382 NT","v":"Supporter","l":"L1"},{"i":"4985","n":"Nguyễn Như Duy","s":"382 NT","v":"Stylist","l":"L1"},{"i":"18586","n":"Nguyễn Thị Lan","s":"382 NT","v":"Skinner","l":"L1"},{"i":"10519","n":"Nguyễn Thị Minh","s":"382 NT","v":"Skinner","l":"L1"},{"i":"19954","n":"Nguyễn Thị Thanh Mai","s":"382 NT","v":"Supporter","l":"L2"},{"i":"21307","n":"Nguyễn Thị Thu Huyền","s":"382 NT","v":"Skinner","l":"L1"},{"i":"17766","n":"Nguyễn Thị Thu Quỳnh","s":"382 NT","v":"Skinner","l":"L1"},{"i":"13697","n":"Nguyễn Thị Thuỳ","s":"382 NT","v":"Skinner","l":"L1"},{"i":"20201","n":"Nguyễn Viết Sỹ","s":"382 NT","v":"Stylist","l":"L1"},{"i":"21137","n":"Phạm Thị Châu","s":"382 NT","v":"Skinner","l":"L1"},{"i":"567","n":"Phạm Văn Long","s":"382 NT","v":"Stylist","l":"L2"},{"i":"6273","n":"Trần Thị Ngọc","s":"382 NT","v":"Supporter","l":"L2"},{"i":"12032","n":"Tạ Thuỳ Linh","s":"382 NT","v":"Skinner","l":"L1"},{"i":"1804","n":"Vũ Thị Minh","s":"382 NT","v":"Skinner","l":"L2"},{"i":"21337","n":"Vũ Đức Thuận","s":"382 NT","v":"Stylist","l":"L1"},{"i":"9070","n":"Cao Thị Linh","s":"39 HBT","v":"Skinner","l":"L2"},{"i":"10498","n":"Hoàng Bảo Ngọc","s":"39 HBT","v":"Stylist","l":"L2"},{"i":"21361","n":"Hoàng Văn Quân NQ","s":"39 HBT","v":"Stylist","l":"L1"},{"i":"20788","n":"Lê Thị Thu Trang","s":"39 HBT","v":"Supporter","l":"L2"},{"i":"9185","n":"Lê Văn Duy CTV","s":"39 HBT","v":"Stylist","l":"LCTV ST"},{"i":"6684","n":"Lê Văn Quang","s":"39 HBT","v":"Stylist","l":"L2"},{"i":"13258","n":"Lý Thị Thu Hiền","s":"39 HBT","v":"Skinner","l":"L1"},{"i":"270","n":"Lường Thị Thảo","s":"39 HBT","v":"Skinner","l":"L2"},{"i":"20777","n":"Lữ Công Minh","s":"39 HBT","v":"Stylist","l":"L1"},{"i":"18631","n":"Nguyễn Gia Quỳnh","s":"39 HBT","v":"Supporter","l":"L2"},{"i":"17236","n":"Nguyễn Hoàng Bảo Anh NQ","s":"39 HBT","v":"Skinner","l":"L1"},{"i":"20256","n":"Nguyễn Thị Lan Anh","s":"39 HBT","v":"Skinner","l":"L1"},{"i":"19020","n":"Nguyễn Thị Xim","s":"39 HBT","v":"Skinner","l":"L1"},{"i":"20796","n":"Đinh Thị Sin","s":"39 HBT","v":"Skinner","l":"L1"},{"i":"21310","n":"Cao Đình Khương","s":"4 LQD BN","v":"Stylist","l":"ST L1C"},{"i":"18814","n":"Cảnh Thị Thuỷ","s":"4 LQD BN","v":"Supporter","l":"L1"},{"i":"15035","n":"Hồ Ngọc Trung","s":"4 LQD BN","v":"Stylist","l":"L1"},{"i":"21133","n":"Nguyễn Thị Hưởng","s":"4 LQD BN","v":"Skinner","l":"L1"},{"i":"14330","n":"Phạm Thị Thương","s":"4 LQD BN","v":"Skinner","l":"L1"},{"i":"13995","n":"Lê Quốc Cường","s":"401/1 NDT","v":"Stylist","l":"L1"},{"i":"19894","n":"Lê Thị Mai Ly","s":"401/1 NDT","v":"Skinner","l":"L1"},{"i":"18183","n":"Mạc Thị Ánh Dương NQ","s":"401/1 NDT","v":"Skinner","l":"L1"},{"i":"17589","n":"Nguyễn Thành Lễ","s":"401/1 NDT","v":"Stylist","l":"L2"},{"i":"20756","n":"Nguyễn Thị Hồng Cẩm","s":"401/1 NDT","v":"Skinner","l":"L1"},{"i":"20813","n":"Nguyễn Thị Kim Ngân","s":"401/1 NDT","v":"Skinner","l":"L1"},{"i":"2324","n":"Nguyễn Thị Ánh Vi","s":"401/1 NDT","v":"Supporter","l":"L2"},{"i":"19056","n":"Thái Thị Như Ý","s":"401/1 NDT","v":"Skinner","l":"L3"},{"i":"18228","n":"Trần Thị Kim Ngân","s":"401/1 NDT","v":"Skinner","l":"L1"},{"i":"18887","n":"Tạ Thanh Đình","s":"401/1 NDT","v":"Stylist","l":"L2"},{"i":"19431","n":"Đoàn Tấn Lợi","s":"401/1 NDT","v":"Stylist","l":"L1"},{"i":"19860","n":"Lê Thị Kiều Oanh","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"9618","n":"Lê Văn Sang","s":"420 HTP","v":"Stylist","l":"L2"},{"i":"14325","n":"Lưu Khiết Vy","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"21271","n":"Nguyễn Mạnh Tuấn","s":"420 HTP","v":"Stylist","l":"L1"},{"i":"19034","n":"Nguyễn Ngọc Ánh","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"20962","n":"Nguyễn Thị Hồng Ngân","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"20004","n":"Nguyễn Thị Hồng Thắm","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"10275","n":"Nguyễn Thị Lệ Quyên","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"21226","n":"Nguyễn Xuân Ngoan","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"19815","n":"Ngô Thị Thuý Nga","s":"420 HTP","v":"Supporter","l":"L1"},{"i":"1570","n":"Ngô Trần Nhật Quang","s":"420 HTP","v":"Stylist","l":"L1"},{"i":"1409","n":"Phạm Quang Khánh","s":"420 HTP","v":"Stylist","l":"L3"},{"i":"20514","n":"Trương Hoàng Anh Tuấn","s":"420 HTP","v":"Stylist","l":"L2"},{"i":"2770","n":"Trần Minh Dương","s":"420 HTP","v":"Stylist","l":"L1"},{"i":"21304","n":"Trần Tú Như","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"10506","n":"Vũ Đức Thiện","s":"420 HTP","v":"Stylist","l":"L2"},{"i":"20535","n":"sk.kn67","s":"420 HTP","v":"Skinner","l":"L1"},{"i":"20389","n":"sup.kn66","s":"420 HTP","v":"Supporter","l":"L1"},{"i":"13779","n":"Đoàn Ngọc Nhất","s":"420 HTP","v":"Stylist","l":"L1"},{"i":"4942","n":"Đặng Hồ Thủy","s":"420 HTP","v":"Stylist","l":"L1"},{"i":"20853","n":"Huỳnh Thu Thảo","s":"451 PVT","v":"Skinner","l":"L2"},{"i":"21246","n":"Hà Văn Tính","s":"451 PVT","v":"Stylist","l":"L2"},{"i":"1518","n":"Lê Trần Tú Quyên","s":"451 PVT","v":"Supporter","l":"L1"},{"i":"21254","n":"Lý Gia Bảo","s":"451 PVT","v":"Stylist","l":"L1"},{"i":"20407","n":"Lưu Trí Quốc","s":"451 PVT","v":"Supporter","l":"L1"},{"i":"4608","n":"Nguyễn Thị Diệu","s":"451 PVT","v":"Skinner","l":"L3"},{"i":"21200","n":"dieu.sup00","s":"451 PVT","v":"Supporter","l":"L1"},{"i":"21225","n":"thao.sup001","s":"451 PVT","v":"Supporter","l":"L1"},{"i":"20218","n":"Nguyễn Văn Huỳnh","s":"451 PVT / 1371 PVT","v":"Stylist","l":"L2"},{"i":"21231","n":"Phạm Thị Ngọc Hiền","s":"451 PVT / 255 NAN","v":"Skinner","l":"L1"},{"i":"21003","n":"Bùi Thị Thảo Nhy","s":"483 TN","v":"Skinner","l":"L1"},{"i":"7120","n":"Diệp Ngọc Nhi","s":"483 TN","v":"Supporter","l":"L2"},{"i":"13523","n":"Dương Trung Học","s":"483 TN","v":"Skinner","l":"L1"},{"i":"2976","n":"Lê Lý Chí Tâm","s":"483 TN","v":"Stylist","l":"L2"},{"i":"21339","n":"Nguyễn Thanh Trúc","s":"483 TN","v":"Skinner","l":"L1"},{"i":"19698","n":"Nguyễn Thị Hiểu Ngân","s":"483 TN","v":"Skinner","l":"L2"},{"i":"20343","n":"Nguyễn Thị Ngọc Bích","s":"483 TN","v":"Skinner","l":"L1"},{"i":"8643","n":"Ngô Văn Anh Thoại","s":"483 TN","v":"Stylist","l":"L1"},{"i":"1202","n":"Ngô Đình Phúc","s":"483 TN","v":"Stylist","l":"L2"},{"i":"19756","n":"Phạm Tiến Phát","s":"483 TN","v":"Stylist","l":"L1"},{"i":"6608","n":"Phạm Văn Nhiều","s":"483 TN","v":"Stylist","l":"L3"},{"i":"2236","n":"Trương Thái Lâm","s":"483 TN","v":"Stylist","l":"L1"},{"i":"11285","n":"Trần Hầu Xìm","s":"483 TN","v":"Skinner","l":"L2"},{"i":"20982","n":"hoc.supkn","s":"483 TN","v":"Supporter","l":"L1"},{"i":"21340","n":"kn.sk01","s":"483 TN","v":"Skinner","l":"L1"},{"i":"8186","n":"Dương Thị Trà","s":"50BT4 NPC LD","v":"Skinner","l":"L1"},{"i":"21312","n":"Hà Thị Thuỳ Dung","s":"50BT4 NPC LD","v":"Skinner","l":"L1"},{"i":"5407","n":"Lành Văn Huy","s":"50BT4 NPC LD","v":"Stylist","l":"L1"},{"i":"10929","n":"Lý Thành Đô","s":"50BT4 NPC LD","v":"Stylist","l":"L2"},{"i":"21193","n":"Lư Thùy Linh","s":"50BT4 NPC LD","v":"Skinner","l":"L1"},{"i":"13978","n":"Mai Thị Giang","s":"50BT4 NPC LD","v":"Skinner","l":"L1"},{"i":"15763","n":"Mai Thị Trang","s":"50BT4 NPC LD","v":"Skinner","l":"L1"},{"i":"19346","n":"Nguyễn Minh Hiển","s":"50BT4 NPC LD","v":"Stylist","l":"L1"},{"i":"589","n":"Nguyễn Minh Thắng NQ","s":"50BT4 NPC LD","v":"Stylist","l":"L1"},{"i":"21208","n":"Nguyễn Thanh Thúy","s":"50BT4 NPC LD","v":"Skinner","l":"L1"},{"i":"4388","n":"Ngô Doãn Hưng","s":"50BT4 NPC LD","v":"Stylist","l":"L3"},{"i":"9504","n":"Phạm Thị Duyên","s":"50BT4 NPC LD","v":"Skinner","l":"L2"},{"i":"4602","n":"Phạm Văn Quý","s":"50BT4 NPC LD","v":"Stylist","l":"L3"},{"i":"2483","n":"Vũ Văn Nguyện","s":"50BT4 NPC LD","v":"Stylist","l":"L2"},{"i":"21300","n":"sup.kn","s":"50BT4 NPC LD","v":"Supporter","l":"L1"},{"i":"13433","n":"Đỗ Thị Phương Mai","s":"50BT4 NPC LD","v":"Supporter","l":"L2"},{"i":"20745","n":"Lê Thanh Hà","s":"55A NVL","v":"Supporter","l":"L1"},{"i":"18952","n":"Nguyễn Gia Linh","s":"55A NVL","v":"Skinner","l":"L1"},{"i":"20760","n":"Nguyễn Quang Đạt","s":"55A NVL","v":"Stylist","l":"L1"},{"i":"19352","n":"Nguyễn Thị Thuỳ Trang","s":"55A NVL","v":"Skinner","l":"L1"},{"i":"20464","n":"Nguyễn Trần Gia Hiển","s":"55A NVL","v":"Stylist","l":"L1"},{"i":"19863","n":"Nguyễn Vũ Hiếu","s":"55A NVL","v":"Stylist","l":"L1"},{"i":"19685","n":"Ngô Mạnh Cường","s":"55A NVL","v":"Supporter","l":"L2"},{"i":"21299","n":"Trương Thị Huyền","s":"55A NVL","v":"Skinner","l":"L1"},{"i":"15768","n":"Đoàn Thị Kiều Loan","s":"55A NVL","v":"Skinner","l":"L1"},{"i":"10631","n":"Đặng Đình Tân","s":"55A NVL","v":"Stylist","l":"L3"},{"i":"4581","n":"Đỗ Thị Ly","s":"55A NVL","v":"Skinner","l":"L1"},{"i":"19625","n":"Cai Đặng Đăng Khoa","s":"575 AC","v":"Stylist","l":"L1"},{"i":"11960","n":"Lê Thị Huỳnh Mơ","s":"575 AC","v":"Supporter","l":"L2"},{"i":"13775","n":"Nguyễn Lê Huyền Trân","s":"575 AC","v":"Skinner","l":"L1"},{"i":"14661","n":"Nguyễn Thị Thanh Diệu","s":"575 AC","v":"Supporter","l":"L2"},{"i":"14732","n":"Nguyễn Thị Thái Vi","s":"575 AC","v":"Skinner","l":"L1"},{"i":"20842","n":"Ngô Dương Toàn","s":"575 AC","v":"Stylist","l":"L1"},{"i":"20886","n":"Phùng Hoàng Như Thảo","s":"575 AC","v":"Skinner","l":"L1"},{"i":"6481","n":"Sỳ Trương Bình","s":"575 AC","v":"Stylist","l":"L2"},{"i":"20558","n":"Trần Lê Yến My","s":"575 AC","v":"Skinner","l":"L1"},{"i":"21269","n":"Trần Thị Huỳnh Hoa","s":"575 AC","v":"Skinner","l":"L1"},{"i":"19021","n":"Trịnh  Minh Phúc","s":"575 AC","v":"Stylist","l":"L2"},{"i":"4842","n":"Trịnh Cao Thắng","s":"575 AC","v":"Stylist","l":"L1"},{"i":"19753","n":"Viên Yến Vy","s":"575 AC","v":"Skinner","l":"L1"},{"i":"18934","n":"dieu.knsup","s":"575 AC","v":"Skinner","l":"L1"},{"i":"5507","n":"Đặng Minh Phúc","s":"575 AC","v":"Stylist","l":"L1"},{"i":"13179","n":"Cao Thị Vinh","s":"58 NVC NA","v":"Skinner","l":"L1"},{"i":"14823","n":"Lương Thảo Anh","s":"58 NVC NA","v":"Skinner","l":"L2"},{"i":"18881","n":"Nguyễn Bá Nhật Đăng","s":"58 NVC NA","v":"Stylist","l":"L1"},{"i":"19898","n":"Nguyễn Văn Chiến","s":"58 NVC NA","v":"Stylist","l":"L2"},{"i":"16004","n":"Nguyễn Văn Thắng","s":"58 NVC NA","v":"Stylist","l":"L3"},{"i":"21181","n":"Phan Thị Ái Linh","s":"58 NVC NA","v":"Skinner","l":"L1"},{"i":"21194","n":"Trương Thị Quỳnh Như","s":"58 NVC NA","v":"Skinner","l":"L1"},{"i":"19918","n":"Trần Thị Thanh Nga","s":"58 NVC NA","v":"Skinner","l":"L1"},{"i":"20452","n":"Võ Sơn Duy","s":"58 NVC NA","v":"Stylist","l":"L2"},{"i":"2074","n":"Lê Thị Kim Ánh","s":"595 BT TH","v":"Skinner","l":"L1"},{"i":"20748","n":"Lê Thị Kiều Trang","s":"595 BT TH","v":"Skinner","l":"L1"},{"i":"10687","n":"Nguyễn Khắc Hải","s":"595 BT TH","v":"Stylist","l":"L2"},{"i":"20747","n":"Nguyễn Lê Trung Tiến","s":"595 BT TH","v":"Stylist","l":"L1"},{"i":"18384","n":"Nguyễn Thị Lan","s":"595 BT TH","v":"Skinner","l":"L2"},{"i":"19525","n":"Nguyễn Thị Phượng","s":"595 BT TH","v":"Skinner","l":"L1"},{"i":"10447","n":"Nguyễn Văn Huy","s":"595 BT TH","v":"Stylist","l":"L2"},{"i":"21031","n":"Nguyễn Văn Tuấn","s":"595 BT TH","v":"Stylist","l":"L1"},{"i":"18804","n":"Trần Thị Thuý Mai","s":"595 BT TH","v":"Supporter","l":"L1"},{"i":"17789","n":"La Thị Duyên","s":"62 LH","v":"Skinner","l":"L1"},{"i":"1972","n":"Nguyễn Long Đạt","s":"62 LH","v":"Stylist","l":"L1"},{"i":"1879","n":"Nguyễn Tiến Nhân","s":"62 LH","v":"Stylist","l":"L3"},{"i":"9965","n":"Phạm Trọng Long","s":"62 LH","v":"Stylist","l":"L1"},{"i":"13886","n":"Phạm Thị Tâm","s":"62 LH","v":"Skinner","l":"L1"},{"i":"21040","n":"phuong.sk","s":"62 LH","v":"Skinner","l":"L2"},{"i":"19541","n":"Đỗ Ngọc Mai","s":"62 LH","v":"Skinner","l":"L1"},{"i":"21183","n":"Dương Thị Mai Huyền","s":"65 CD","v":"Skinner","l":"L1"},{"i":"15253","n":"Hoàng Minh Đức","s":"65 CD","v":"Stylist","l":"L1"},{"i":"13968","n":"Nguyễn Hồng Ngân","s":"65 CD","v":"Skinner","l":"L1"},{"i":"17625","n":"Nguyễn Thị Cẩm Ly","s":"65 CD","v":"Skinner","l":"L1"},{"i":"5857","n":"Trần Văn Phú","s":"65 CD","v":"Stylist","l":"L3"},{"i":"19030","n":"ngan.sksup","s":"65 CD","v":"Supporter","l":"L1"},{"i":"21190","n":"Đỗ Văn Trường","s":"65 CD","v":"Stylist","l":"L1"},{"i":"19365","n":"Nguyễn Quỳnh Như","s":"65 CD / 90 NH","v":"Skinner","l":"L1"},{"i":"20518","n":"Phạm Thị Huyền My","s":"65 CD / 90 NH","v":"Skinner","l":"L1"},{"i":"18840","n":"Nguyễn Thị Linh","s":"68 LN NA","v":"Skinner","l":"L1"},{"i":"10014","n":"Nguyễn Văn Mạnh","s":"68 LN NA","v":"Stylist","l":"L3"},{"i":"978","n":"Nguyễn Văn Thức","s":"68 LN NA","v":"Stylist","l":"L2"},{"i":"21180","n":"Trương Như Luân","s":"68 LN NA","v":"Stylist","l":"L1"},{"i":"16469","n":"Trần Thị Mỹ","s":"68 LN NA","v":"Skinner","l":"L2"},{"i":"2064","n":"Trần Đức Đình Trọng","s":"68 LN NA","v":"Stylist","l":"L1"},{"i":"21258","n":"sup.sk","s":"68 LN NA","v":"Supporter","l":"L1"},{"i":"21338","n":"Đặng Thị Vy","s":"68 LN NA","v":"Skinner","l":"L1"},{"i":"21342","n":"Nguyễn Thị Thu Uyên","s":"68 LN NA / 58 NVC NA","v":"Skinner","l":"L1"},{"i":"17714","n":"Lê Anh Quốc","s":"7 DTP LA","v":"Stylist","l":"L2"},{"i":"20774","n":"Nguyễn Hoàng Thái","s":"7 DTP LA","v":"Stylist","l":"L2"},{"i":"20750","n":"Nguyễn Ngọc Thảo Vy","s":"7 DTP LA","v":"Skinner","l":"L2"},{"i":"21360","n":"Nguyễn Quang Vinh","s":"7 DTP LA","v":"Stylist","l":"L1"},{"i":"21302","n":"Nguyễn Thị Yến Vy","s":"7 DTP LA","v":"Skinner","l":"L1"},{"i":"21324","n":"Phạm Kim Loan","s":"7 DTP LA","v":"Skinner","l":"L1"},{"i":"20759","n":"Trần Hữu Lợi","s":"7 DTP LA","v":"Stylist","l":"L1"},{"i":"20631","n":"sup.knqn","s":"7 DTP LA","v":"Supporter","l":"L1"},{"i":"21249","n":"Đinh Thị Kim Ngân","s":"7 DTP LA","v":"Skinner","l":"L1"},{"i":"16459","n":"Nguyễn Hải My","s":"708 LTT","v":"Skinner","l":"L1"},{"i":"18836","n":"Nguyễn Thị Bé Mỹ","s":"708 LTT","v":"Stylist","l":"L1"},{"i":"14199","n":"Nguyễn Thị Kiều Ngân","s":"708 LTT","v":"Supporter","l":"L1"},{"i":"19633","n":"Nguyễn Thị Ngọc Hân","s":"708 LTT","v":"Skinner","l":"L1"},{"i":"14743","n":"Thái Thị Như Mai","s":"708 LTT","v":"Stylist","l":"L2"},{"i":"19764","n":"Trương Huỳnh Trung Nghĩa","s":"708 LTT","v":"Stylist","l":"L1"},{"i":"9016","n":"Võ Tấn Vàng","s":"708 LTT","v":"Stylist","l":"L2"},{"i":"20846","n":"Võ Thị Tuyết Nhi","s":"708 LTT","v":"Skinner","l":"L1"},{"i":"21034","n":"Lê Phan Hoàng Phúc","s":"708 LTT / 99 TSN","v":"Supporter","l":"L1"},{"i":"20122","n":"Nguyễn Thuý Hằng","s":"708 LTT / 99 TSN","v":"Skinner","l":"L1"},{"i":"19241","n":"Hoàng Quốc Đạt","s":"730 TL10","v":"Stylist","l":"L1"},{"i":"10508","n":"Huỳnh Văn Công","s":"730 TL10","v":"Stylist","l":"L1"},{"i":"13481","n":"Hùynh Phúc Nguyên","s":"730 TL10","v":"Stylist","l":"L1"},{"i":"19677","n":"Hồ Thị Trúc Hà","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"10538","n":"Lê Hoàng Tín","s":"730 TL10","v":"Stylist","l":"L2"},{"i":"9244","n":"Lê Thị Hồng Ngân","s":"730 TL10","v":"Skinner","l":"L2"},{"i":"20964","n":"Nguyễn Huỳnh Nhã Trúc","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"21145","n":"Nguyễn Hồng Ân","s":"730 TL10","v":"Stylist","l":"L1"},{"i":"13165","n":"Nguyễn Ngọc Hân","s":"730 TL10","v":"Supporter","l":"L1"},{"i":"18494","n":"Nguyễn Thái Điền","s":"730 TL10","v":"Stylist","l":"L1"},{"i":"13864","n":"Phan Thị My","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"10119","n":"Quách Tuyết Trang","s":"730 TL10","v":"Skinner","l":"L2"},{"i":"3700","n":"Thái Ngoan","s":"730 TL10","v":"Stylist","l":"L3"},{"i":"11055","n":"Thạch Thị Chanh Đa","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"8899","n":"Trịnh Thị Thu Hà","s":"730 TL10","v":"Supporter","l":"L1"},{"i":"7872","n":"Vòng Nguyệt Minh","s":"730 TL10","v":"Stylist","l":"L1"},{"i":"18942","n":"Võ Thị Mỹ Ân","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"21011","n":"ha.sk","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"4651","n":"Đặng Nhựt Bằng","s":"730 TL10","v":"Stylist","l":"L2"},{"i":"21278","n":"Đỗ Thị Hồng Phúc","s":"730 TL10","v":"Skinner","l":"L1"},{"i":"20455","n":"Hà Quang Duy","s":"76 PVH","v":"Stylist","l":"L1"},{"i":"20362","n":"Lâm Thị Hồng Ngọc","s":"76 PVH","v":"Skinner","l":"L1"},{"i":"6867","n":"Lê Hoàng Phúc","s":"76 PVH","v":"Stylist","l":"L3"},{"i":"21185","n":"Lê Thị Hồng Dung","s":"76 PVH","v":"Skinner","l":"L1"},{"i":"21140","n":"Nguyễn Minh Hoàng","s":"76 PVH","v":"Stylist","l":"L1"},{"i":"18051","n":"Nguyễn Thị Diệu Hà","s":"76 PVH","v":"Skinner","l":"L2"},{"i":"10416","n":"Nguyễn Thị Loan Anh","s":"76 PVH","v":"Skinner","l":"L2"},{"i":"12238","n":"Nguyễn Thị Thu Thuỷ","s":"76 PVH","v":"Supporter","l":"L2"},{"i":"20734","n":"Nguyễn Thị Thu Thủy","s":"76 PVH","v":"Skinner","l":"L1"},{"i":"13260","n":"Nguyễn Văn Hùng","s":"76 PVH","v":"Stylist","l":"L2"},{"i":"16225","n":"Dương Minh Thư","s":"8 CVL","v":"Supporter","l":"L1"},{"i":"21354","n":"Hoàng Quảng Linh","s":"8 CVL","v":"Stylist","l":"L1"},{"i":"817","n":"Lê Châu Tuấn","s":"8 CVL","v":"Stylist","l":"L3"},{"i":"17276","n":"Lê Dương Lam Vy","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"21007","n":"Lê Đông Nghi","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"10575","n":"Nguyễn Hải Long","s":"8 CVL","v":"Stylist","l":"L2"},{"i":"14196","n":"Nguyễn Như Tú","s":"8 CVL","v":"Stylist","l":"L1"},{"i":"1744","n":"Nguyễn Thanh Phong","s":"8 CVL","v":"Stylist","l":"L1"},{"i":"2312","n":"Nguyễn Thành Nam","s":"8 CVL","v":"Stylist","l":"L2"},{"i":"20765","n":"Nguyễn Thị Cẩm Hằng","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"19198","n":"Nguyễn Thị Hà Thanh","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"20800","n":"Nguyễn Thị Mỹ Tiên","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"2530","n":"Nguyễn Đông Huy","s":"8 CVL","v":"Stylist","l":"L1"},{"i":"20515","n":"Ngô Nguyễn Trung Hiếu","s":"8 CVL","v":"Stylist","l":"L1"},{"i":"21289","n":"Phan Vinh Quang","s":"8 CVL","v":"Stylist","l":"L1"},{"i":"19511","n":"Phạm Thị Hồng Duyên","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"11224","n":"Trần Thị Hà Trang","s":"8 CVL","v":"Skinner","l":"L2"},{"i":"20794","n":"Trịnh Lý Bình","s":"8 CVL","v":"Supporter","l":"L1"},{"i":"2281","n":"Võ Thị Thanh Hà CTV","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"16476","n":"Đỗ Hoàng Bảo Trân","s":"8 CVL","v":"Skinner","l":"L1"},{"i":"8232","n":"Huỳnh Văn Kha","s":"80 PL BD","v":"Stylist","l":"L2"},{"i":"2588","n":"Lê Giang Quốc Thắng","s":"80 PL BD","v":"Stylist","l":"L2"},{"i":"3484","n":"Lê Thị Thuỳ Trang","s":"80 PL BD","v":"Skinner","l":"L2"},{"i":"2850","n":"Nguyễn Hoàng Trường","s":"80 PL BD","v":"Stylist","l":"L3"},{"i":"21020","n":"Nguyễn Thị Huế Trân","s":"80 PL BD","v":"Skinner","l":"L2"},{"i":"17787","n":"Nguyễn Thị Nga","s":"80 PL BD","v":"Skinner","l":"L2"},{"i":"18936","n":"Nông Minh Hạnh","s":"80 PL BD","v":"Supporter","l":"L2"},{"i":"11263","n":"Thái Thị Thanh Thảo","s":"80 PL BD","v":"Skinner","l":"L2"},{"i":"4859","n":"Trần Thanh Tài","s":"80 PL BD","v":"Stylist","l":"L3"},{"i":"21222","n":"Vũ Lê Phương Uyên","s":"80 PL BD","v":"Skinner","l":"L1"},{"i":"17607","n":"Vũ Thị Ngọc Linh","s":"80 PL BD","v":"Supporter","l":"L2"},{"i":"18888","n":"Vũ Đình Luyện","s":"80 PL BD","v":"Stylist","l":"L1"},{"i":"21327","n":"Vương Mỹ Uyên","s":"80 PL BD","v":"Skinner","l":"L1"},{"i":"6715","n":"Đinh Văn Thạnh","s":"80 PL BD","v":"Stylist","l":"L2"},{"i":"18394","n":"Lê Quang Trường","s":"80 TP TH","v":"Stylist","l":"L1"},{"i":"20652","n":"Lê Thị Thanh Thuý","s":"80 TP TH","v":"Skinner","l":"L1"},{"i":"19890","n":"Lê Xuân Tùng","s":"80 TP TH","v":"Stylist","l":"L2"},{"i":"8336","n":"Nguyễn Thị Hồng Ngọc","s":"80 TP TH","v":"Skinner","l":"L1"},{"i":"19851","n":"Nguyễn Thị Phương","s":"80 TP TH","v":"Skinner","l":"L1"},{"i":"7496","n":"Nguyễn Thị Tình","s":"80 TP TH","v":"Skinner","l":"L2"},{"i":"21264","n":"Nguyễn Văn Hoàng","s":"80 TP TH","v":"Stylist","l":"L1"},{"i":"9317","n":"Nguyễn Xuân Mạnh","s":"80 TP TH","v":"Stylist","l":"L2"},{"i":"11317","n":"Quản Thị Phương","s":"80 TP TH","v":"Skinner","l":"L1"},{"i":"14344","n":"Vũ Văn Lương","s":"80 TP TH","v":"Stylist","l":"L1"},{"i":"20887","n":"phuong.kn","s":"80 TP TH","v":"Supporter","l":"L1"},{"i":"13461","n":"Hoàng Thị Lan Anh","s":"90 NH","v":"Supporter","l":"L1"},{"i":"2499","n":"Hoàng Văn Linh","s":"90 NH","v":"Stylist","l":"L2"},{"i":"13549","n":"Lại Thị Xuân","s":"90 NH","v":"Skinner","l":"L1"},{"i":"8552","n":"Nguyễn Mạnh Đạt","s":"90 NH","v":"Stylist","l":"L2"},{"i":"14293","n":"Nguyễn Thị Thuỳ Trang","s":"90 NH","v":"Skinner","l":"L1"},{"i":"20980","n":"Nguyễn Văn Thành","s":"90 NH","v":"Stylist","l":"ST L1C"},{"i":"11536","n":"Phạm Thị Tuyết Nhung","s":"90 NH","v":"Skinner","l":"L1"},{"i":"20521","n":"sk.kn87","s":"90 NH","v":"Skinner","l":"L1"},{"i":"13578","n":"Đinh Tiến Duy","s":"90 NH","v":"Stylist","l":"L3"},{"i":"20632","n":"Đỗ Thị Nga","s":"90 NH","v":"Supporter","l":"L1"},{"i":"13672","n":"Đỗ Thị Thu Trang","s":"90 NH","v":"Skinner","l":"L1"},{"i":"213","n":"Đỗ Văn Sỹ","s":"90 NH","v":"Stylist","l":"L1"},{"i":"19735","n":"Cao Thị Kim Chi","s":"927 HG","v":"Skinner","l":"L1"},{"i":"21280","n":"Huỳnh Bá Thành","s":"927 HG","v":"Stylist","l":"L1"},{"i":"21126","n":"Huỳnh Văn Kha","s":"927 HG","v":"Stylist","l":"L1"},{"i":"2488","n":"Kim Thị Mỹ Trinh","s":"927 HG","v":"Supporter","l":"L2"},{"i":"7422","n":"Nguyễn Hữu Minh","s":"927 HG","v":"Supporter","l":"L2"},{"i":"9809","n":"Nguyễn Chí Khanh","s":"927 HG","v":"Stylist","l":"L1"},{"i":"20172","n":"Nguyễn Hoàng Kha","s":"927 HG","v":"Stylist","l":"L1"},{"i":"20143","n":"Nguyễn Hoàng Triệu Vy","s":"927 HG","v":"Skinner","l":"L1"},{"i":"10779","n":"Nguyễn Thị Kim Ngân","s":"927 HG","v":"Skinner","l":"L1"},{"i":"9341","n":"Nguyễn Thị Thúy Hằng","s":"927 HG","v":"Skinner","l":"L1"},{"i":"18794","n":"Nguyễn Trung Thực","s":"927 HG","v":"Stylist","l":"L1"},{"i":"20878","n":"Ngô Thuỳ Phương","s":"927 HG","v":"Skinner","l":"L1"},{"i":"19933","n":"Ngô Thị Ngọc Ánh","s":"927 HG","v":"Skinner","l":"L1"},{"i":"942","n":"PHÙ THỊ HOÀNG UYÊN","s":"927 HG","v":"Skinner","l":"L2"},{"i":"12256","n":"Phạm Văn Phát","s":"927 HG","v":"Stylist","l":"L2"},{"i":"20106","n":"Trương Huỳnh Nhi","s":"927 HG","v":"Skinner","l":"L1"},{"i":"3850","n":"Trương Phúc Tỷ","s":"927 HG","v":"Stylist","l":"L2"},{"i":"3503","n":"Trần Nhất Duyên","s":"927 HG","v":"Stylist","l":"L2"},{"i":"2014","n":"Võ Văn Trí","s":"927 HG","v":"Stylist","l":"L3"},{"i":"5866","n":"Đỗ Thị Linh","s":"927 HG","v":"Skinner","l":"L1"},{"i":"7597","n":"Danh Thị Sa Ri","s":"99 TSN","v":"Skinner","l":"L2"},{"i":"20967","n":"Dương Quốc Khánh","s":"99 TSN","v":"Stylist","l":"L1"},{"i":"947","n":"Lê Sỹ Sơn","s":"99 TSN","v":"Stylist","l":"L3"},{"i":"5368","n":"Mai Ngọc Thắng","s":"99 TSN","v":"Supporter","l":"L1"},{"i":"20988","n":"Nguyễn Chánh Tín","s":"99 TSN","v":"Stylist","l":"L1"},{"i":"1801","n":"Nguyễn Phạm Trường Duy","s":"99 TSN","v":"Stylist","l":"L1"},{"i":"20839","n":"Nguyễn Quang Huy","s":"99 TSN","v":"Stylist","l":"L1"},{"i":"20865","n":"Nguyễn Thị Thùy Trang","s":"99 TSN","v":"Skinner","l":"L1"},{"i":"20465","n":"Phan Thị Thanh Ngọc (Sup)","s":"99 TSN","v":"Supporter","l":"L2"},{"i":"3137","n":"Phạm Hồng Nga","s":"99 TSN","v":"Skinner","l":"L1"},{"i":"21318","n":"Phạm Kim Ngân","s":"99 TSN","v":"Skinner","l":"SK L1C"},{"i":"1870","n":"Phạm Văn Tân","s":"99 TSN","v":"Stylist","l":"L2"},{"i":"12945","n":"Trương Thị Ngọc Nhi","s":"99 TSN","v":"Skinner","l":"LCTV SK"},{"i":"20177","n":"Trần Huỳnh Hải Ngọc","s":"99 TSN","v":"Skinner","l":"L1"},{"i":"11784","n":"Trần Quốc Hoài Nam NQ","s":"99 TSN","v":"Stylist","l":"L1"},{"i":"20866","n":"Trần Thị Kim Ngân","s":"99 TSN","v":"Skinner","l":"L1"},{"i":"15747","n":"Trần Thị Quỳnh Như","s":"99 TSN","v":"Skinner","l":"L1"},{"i":"19813","n":"Võ Kế Quốc Hưng","s":"99 TSN","v":"Stylist","l":"L1"},{"i":"4780","n":"Đào Mạnh Đạt","s":"99 TSN","v":"Stylist","l":"L3"},{"i":"6117","n":"Đặng Thị Kim Phụng","s":"99 TSN","v":"Skinner","l":"L1"},{"i":"7460","n":"Đồng Minh Quang","s":"99 TSN","v":"Stylist","l":"L2"}];
+
+/* Bộ câu hỏi — dựng đúng theo file "Phỏng vấn chấm điểm năng lực nhân sự bán hàng UND - SP Q1 2026" */
+const FORMS = {
+  Stylist: [
+    {t:"Nhận diện nhu cầu", w:30, q:[
+      'Khách: "Anh thích để tự nhiên, cắt như lần trước cho anh."',
+      'Khách: "Anh không muốn dùng hoá chất."',
+      'Khách: "Anh uốn 1 lần rồi, không hợp."']},
+    {t:"Tư vấn giải pháp", w:30, q:[
+      'Khách: "Da đầu anh yếu, nhạy cảm nên không uốn."',
+      'Khách: "Em lại chuẩn bị bán hàng đúng không?"']},
+    {t:"Xây bill phù hợp nhu cầu", w:20, q:[
+      'Khách: "Anh chỉ cắt thôi."',
+      'Khách: Nghe xong nhưng im lặng.']},
+    {t:"Chốt sale – giữ trải nghiệm", w:20, q:[
+      'Khách: "Để gần Tết anh làm, giờ anh không có thời gian." / "Anh không có thời gian, làm lẹ lẹ cho anh, cắt xong anh đi đón con."',
+      'Khách: "Để anh suy nghĩ thêm."']}
+  ],
+  SkinnerSup: [
+    {t:"Nhận diện nhu cầu", w:30, q:[
+      'Khách: "Thôi anh lười lắm, mà con trai dùng làm gì."',
+      'Khách: "Em lại bán hàng đúng không?"']},
+    {t:"Tư vấn giải pháp", w:20, q:[
+      'Khách: "Nhà anh có rồi."',
+      'Khách: "Lần trước mua rồi không hiệu quả."',
+      'Khách: "Thôi để lần sau anh mua."',
+      'Khách: "Anh dùng chung với vợ."']},
+    {t:"Xây bill phù hợp nhu cầu", w:20, q:[
+      'Khách im lặng – không phản ứng.',
+      'Khách: "Đừng tư vấn nữa, anh không có nhu cầu."']},
+    {t:"Chốt sale – giữ trải nghiệm", w:30, q:[
+      'Khách: "Vợ anh mua gì anh dùng nấy."',
+      'Khách: "Để anh xuống xem sản phẩm."',
+      'Khách: "Anh dùng nhiều sản phẩm khác rồi mà không có tác dụng."',
+      'Khách: "Anh dùng khó chịu."',
+      'Khách mua trên mạng / tư vấn dịch lẻ.']}
+  ]
+};
+const SCALE = {
+  1:"Không xử lý / trả lời sai hướng, không muốn trao đổi với khách",
+  2:"Có trả lời nhưng yếu, thiếu thuyết phục",
+  3:"Xử lý ổn, đúng cơ bản",
+  4:"Xử lý tốt, đúng trọng tâm",
+  5:"Rất tốt, khách muốn nghe tiếp, xử lý từ chối tốt"
+};
+const formOf = v => v === "Stylist" ? FORMS.Stylist : FORMS.SkinnerSup;
+
+/* ---------- state ---------- */
+const KEY = "salesup_cham_diem_v1";
+let done = [];
+try { done = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { done = []; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){} };
+
+let picked = null, scores = [];
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/g,"d");
+const initials = n => n.trim().split(/\s+/).slice(-2).map(w=>w[0]).join("").toUpperCase();
+const fmtTime = iso => { const d = new Date(iso); const p = n => String(n).padStart(2,"0");
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+
+/* điểm nhóm = TB các câu trong nhóm; tổng = Σ (trọng số × điểm nhóm), quy đổi thang 100 */
+function calc(vitri, sc){
+  const groups = formOf(vitri);
+  let i = 0, total = 0; const gAvg = [];
+  for (const g of groups){
+    const vals = g.q.map(() => sc[i++]).filter(v => v != null);
+    const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+    gAvg.push(avg);
+    if (avg != null) total += avg * g.w / 100;
+  }
+  const filled = sc.filter(v => v != null).length;
+  const n = groups.reduce((a,g)=>a+g.q.length,0);
+  return { gAvg, on5: total, on100: total/5*100, filled, n, complete: filled === n };
+}
+const band = p => p >= 80 ? "good" : p >= 60 ? "mid" : "low";
+const bandTxt = p => p >= 80 ? "Đạt tốt" : p >= 60 ? "Đạt" : "Cần cải thiện";
+
+function toast(msg){
+  const t = $("toast");
+  t.innerHTML = `<span class="tick">✓</span><span>${esc(msg)}</span>`;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 3600);
+}
+
+/* ---------- tabs ---------- */
+function tab(which){
+  const s = which === "score";
+  $("tab-score").setAttribute("aria-selected", s);
+  $("tab-done").setAttribute("aria-selected", !s);
+  $("p-score").classList.toggle("hide", !s);
+  $("p-done").classList.toggle("hide", s);
+  if (!s) renderDone();
+}
+$("tab-score").onclick = () => tab("score");
+$("tab-done").onclick  = () => tab("done");
+
+/* ---------- search ---------- */
+let hits = [], cur = -1;
+
+function search(term){
+  const t = norm(term.trim());
+  if (!t) return [];
+  const byId = /^\d+$/.test(t);
+  const out = [];
+  for (const s of STAFF){
+    let rank = -1;
+    if (byId){
+      if (s.i === t) rank = 0;
+      else if (s.i.startsWith(t)) rank = 1;
+      else if (s.i.includes(t)) rank = 3;
+    }
+    const n = norm(s.n);
+    if (rank < 0){
+      if (n.startsWith(t)) rank = 1;
+      else if (n.includes(t)) rank = 2;
+      else if (norm(s.s).includes(t)) rank = 4;
+    }
+    if (rank >= 0) out.push([rank, s]);
+  }
+  out.sort((a,b) => a[0]-b[0] || a[1].n.localeCompare(b[1].n, "vi"));
+  return out.slice(0, 12).map(x => x[1]);
+}
+
+function renderHits(){
+  const box = $("res");
+  if (!hits.length){
+    box.innerHTML = $("q").value.trim()
+      ? '<div class="empty">Không tìm thấy nhân sự nào khớp.</div>' : "";
+    return;
+  }
+  box.innerHTML = hits.map((s,k) => `
+    <button class="hit${k===cur?" on":""}" role="option" data-k="${k}">
+      <span class="id">${esc(s.i)}</span>
+      <span class="nm">${esc(s.n)}</span>
+      <span class="meta">${esc(s.v)}${s.l?" · "+esc(s.l):""} · ${esc(s.s)}</span>
+    </button>`).join("");
+  box.querySelectorAll(".hit").forEach(b => b.onclick = () => pick(hits[+b.dataset.k]));
+}
+
+$("q").addEventListener("input", e => { hits = search(e.target.value); cur = -1; renderHits(); });
+$("q").addEventListener("keydown", e => {
+  if (!hits.length) return;
+  if (e.key === "ArrowDown"){ e.preventDefault(); cur = (cur+1) % hits.length; renderHits(); }
+  else if (e.key === "ArrowUp"){ e.preventDefault(); cur = (cur-1+hits.length) % hits.length; renderHits(); }
+  else if (e.key === "Enter"){ e.preventDefault(); pick(hits[cur < 0 ? 0 : cur]); }
+  else if (e.key === "Escape"){ hits = []; renderHits(); }
+});
+document.addEventListener("click", e => {
+  if (!$("sb").contains(e.target)){ hits = []; renderHits(); }
+});
+
+/* ---------- chấm điểm ---------- */
+function pick(s){
+  if (!s) return;
+  picked = s;
+  scores = Array(formOf(s.v).reduce((a,g)=>a+g.q.length,0)).fill(null);
+  hits = []; renderHits();
+  $("q").value = "";
+  renderForm();
+  $("form").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function renderForm(){
+  const s = picked, groups = formOf(s.v);
+  const prev = done.find(d => d.id === s.i);
+  let i = 0;
+  const groupsHtml = groups.map((g, gi) => {
+    const qs = g.q.map(text => {
+      const k = i++;
+      return `<div class="q">
+        <div class="txt"><span class="n">${k+1}.</span>${esc(text)}</div>
+        <div class="scale" role="group" aria-label="Điểm câu ${k+1}">
+          ${[1,2,3,4,5].map(v => `<button type="button" data-k="${k}" data-v="${v}"
+             aria-pressed="false" title="${v} — ${esc(SCALE[v])}">${v}</button>`).join("")}
+        </div></div>`;
+    }).join("");
+    return `<div class="grp">
+      <div class="grp-hd">
+        <span class="t">${esc(g.t)}</span>
+        <span class="w">${g.w}%</span>
+        <span class="avg" data-g="${gi}">—</span>
+      </div>${qs}</div>`;
+  }).join("");
+
+  $("form").className = "";
+  $("form").innerHTML = `
+    <div class="card">
+      <div class="who">
+        <div class="avatar">${esc(initials(s.n))}</div>
+        <div class="txt">
+          <div class="nm">${esc(s.n)}</div>
+          <div class="meta">ID <b>${esc(s.i)}</b> · ${esc(s.v)}${s.l?" · "+esc(s.l):""} · Salon ${esc(s.s)}</div>
+        </div>
+        <button class="linkbtn" id="clear">Đổi nhân sự</button>
+      </div>
+      ${prev ? `<div class="note">Nhân sự này đã được chấm lúc ${esc(fmtTime(prev.at))} — ${prev.on100.toFixed(1)}/100. Chấm lại sẽ ghi đè kết quả cũ.</div>` : ""}
+      ${groupsHtml}
+    </div>
+    <div class="bar">
+      <div class="total">
+        <span class="lb">Điểm tổng</span>
+        <span class="v" id="tv">—</span><span class="of">/100</span>
+        <span class="pill na" id="tp">Chưa chấm</span>
+      </div>
+      <span class="left" id="tleft"></span>
+      <button class="primary" id="submit" disabled>Hoàn tất chấm điểm</button>
+    </div>`;
+
+  $("clear").onclick = () => {
+    picked = null; $("form").className = "hide"; $("form").innerHTML = "";
+    $("q").focus();
+  };
+  $("form").querySelectorAll(".scale button").forEach(b => {
+    b.onclick = () => {
+      const k = +b.dataset.k, v = +b.dataset.v;
+      scores[k] = scores[k] === v ? null : v;
+      b.parentElement.querySelectorAll("button").forEach(x =>
+        x.setAttribute("aria-pressed", +x.dataset.v === scores[k]));
+      refresh();
+    };
+  });
+  $("submit").onclick = submit;
+  refresh();
+}
+
+function refresh(){
+  const r = calc(picked.v, scores);
+  $("form").querySelectorAll(".avg").forEach(el => {
+    const a = r.gAvg[+el.dataset.g];
+    el.textContent = a == null ? "—" : a.toFixed(1) + "/5";
+    el.classList.toggle("set", a != null);
+  });
+  const tv = $("tv"), tp = $("tp");
+  if (r.filled === 0){
+    tv.textContent = "—";
+    tp.className = "pill na"; tp.textContent = "Chưa chấm";
+  } else {
+    tv.textContent = r.on100.toFixed(1);
+    tp.className = "pill " + band(r.on100);
+    tp.textContent = bandTxt(r.on100);
+  }
+  $("tleft").textContent = r.complete ? "" : `Còn ${r.n - r.filled}/${r.n} câu chưa chấm`;
+  $("submit").disabled = !r.complete;
+}
+
+function submit(){
+  const r = calc(picked.v, scores);
+  if (!r.complete) return;
+  const rec = {
+    id: picked.i, ten: picked.n, salon: picked.s, vitri: picked.v, level: picked.l,
+    scores: scores.slice(), gAvg: r.gAvg, on5: r.on5, on100: r.on100,
+    at: new Date().toISOString()
+  };
+  const k = done.findIndex(d => d.id === rec.id);
+  const again = k >= 0;
+  if (again) done[k] = rec; else done.unshift(rec);
+  save();
+  $("cnt").textContent = done.length;
+  toast(`${again ? "Đã cập nhật" : "Hoàn tất"} chấm điểm ${picked.n} — ${r.on100.toFixed(1)}/100`);
+  picked = null; scores = [];
+  $("form").className = "hide"; $("form").innerHTML = "";
+  $("q").focus();
+}
+
+/* ---------- danh sách đã chấm ---------- */
+function renderDone(){
+  $("cnt").textContent = done.length;
+  const wrap = $("donewrap");
+  if (!done.length){
+    $("donesum").textContent = "Chưa có nhân sự nào được chấm.";
+    wrap.innerHTML = `<div class="blank"><div class="big">Chưa có nhân sự nào được chấm</div>
+      Sang tab <strong>Chấm điểm</strong>, tìm nhân sự theo ID hoặc tên để bắt đầu.</div>`;
+    return;
+  }
+  const avg = done.reduce((a,d)=>a+d.on100,0)/done.length;
+  $("donesum").textContent = `${done.length} nhân sự đã chấm · điểm trung bình ${avg.toFixed(1)}/100`;
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Thời gian chấm</th><th>ID</th><th>Tên nhân sự</th><th>Vị trí</th><th>Salon</th>
+      <th>Điểm /100</th><th>Xếp loại</th><th></th>
+    </tr></thead><tbody>
+    ${done.map((d,k) => `<tr>
+      <td class="num">${esc(fmtTime(d.at))}</td>
+      <td class="num">${esc(d.id)}</td>
+      <td class="nm">${esc(d.ten)}</td>
+      <td>${esc(d.vitri)}</td>
+      <td>${esc(d.salon)}</td>
+      <td class="num"><strong>${d.on100.toFixed(1)}</strong></td>
+      <td><span class="pill ${band(d.on100)}">${bandTxt(d.on100)}</span></td>
+      <td><button class="del" data-k="${k}" title="Xoá bản ghi">Xoá</button></td>
+    </tr>`).join("")}
+    </tbody></table>`;
+  wrap.querySelectorAll(".del").forEach(b => b.onclick = () => {
+    const d = done[+b.dataset.k];
+    if (!confirm(`Xoá kết quả chấm của ${d.ten} (ID ${d.id})?`)) return;
+    done.splice(+b.dataset.k, 1); save(); renderDone();
+  });
+}
+
+/* ---------- xuất CSV ---------- */
+$("csv").onclick = () => {
+  if (!done.length){ toast("Chưa có dữ liệu để tải."); return; }
+  const maxQ = Math.max(...done.map(d => d.scores.length));
+  const head = ["Thoi gian cham","ID","Ten nhan su","Vi tri","Level","Salon",
+    "NL1 Nhan dien nhu cau (/5)","NL2 Tu van giai phap (/5)","NL3 Xay bill (/5)","NL4 Chot sale (/5)",
+    "Diem tong (/5)","Diem tong (/100)","Xep loai",
+    ...Array.from({length:maxQ}, (_,k) => `Cau ${k+1}`)];
+  const cell = v => {
+    const s = v == null ? "" : String(v);
+    return /[",\n;]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const rows = done.map(d => [
+    fmtTime(d.at), d.id, d.ten, d.vitri, d.level, d.salon,
+    ...d.gAvg.map(a => a == null ? "" : a.toFixed(2)),
+    d.on5.toFixed(2), d.on100.toFixed(1), bandTxt(d.on100),
+    ...Array.from({length:maxQ}, (_,k) => d.scores[k] ?? "")
+  ].map(cell).join(","));
+  const blob = new Blob(["﻿" + [head.map(cell).join(","), ...rows].join("\r\n")],
+    {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `cham-diem-nang-luc-tu-van_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`Đã tải file CSV — ${done.length} nhân sự.`);
+};
+
+/* ---------- init ---------- */
+$("cnt").textContent = done.length;
+$("q").focus();
+</script>
