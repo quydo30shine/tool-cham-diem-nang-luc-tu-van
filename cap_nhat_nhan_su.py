@@ -107,8 +107,11 @@ def main():
           for o in json.loads(m.group(1))}
 
     # --- đọc các file xlsx trong thư mục ---
+    # Có thể tồn tại cả file cũ lẫn file mới cho cùng 1 vị trí (vd "... (2).xlsx").
+    # Với mỗi vị trí chỉ lấy file MỚI NHẤT (theo thời gian sửa file), bỏ qua file cũ hơn.
     moi_raw = []
-    print("Đọc file thống kê:")
+    chon = {}  # vitri -> (mtime, path, ds)
+    print("Quét file xlsx trong thư mục:")
     for f in sorted(HERE.glob("*.xlsx")):
         if f.name.startswith("~$"):
             continue
@@ -116,7 +119,16 @@ def main():
         if ds is None:
             print(f"  [bỏ qua] {f.name} — không nhận ra vị trí trong ô A1")
             continue
-        print(f"  {f.name} -> {vitri}: {len(ds)} dòng")
+        mt = f.stat().st_mtime
+        if vitri not in chon or mt > chon[vitri][0]:
+            if vitri in chon:
+                print(f"  [cũ hơn]  {chon[vitri][1].name} — bỏ, dùng bản mới hơn")
+            chon[vitri] = (mt, f, ds)
+        else:
+            print(f"  [cũ hơn]  {f.name} — bỏ, đã có bản mới hơn cho {vitri}")
+    print("Dùng file mới nhất cho mỗi vị trí:")
+    for vitri, (_, f, ds) in chon.items():
+        print(f"  {vitri}: {f.name} ({len(ds)} dòng)")
         moi_raw += ds
 
     if not moi_raw:
