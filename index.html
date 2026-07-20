@@ -333,7 +333,7 @@ const SALESUP = ["Nguyễn Thị Phương Anh","Nguyễn Thị Thanh Tâm","Ngô
 /* ---------- kho lưu chung ----------
    URL ứng dụng web Apps Script (xem apps_script_ket_qua_cham.gs).
    Để rỗng "" thì tool chạy như cũ: chỉ lưu trên máy người chấm. */
-const SYNC_URL = "";
+const SYNC_URL = "https://script.google.com/macros/s/AKfycbw7wYbiviwEcc2OQMSyEtLIZRr392TpK8jIAteQ-2e8xkx-7D8MM4wfKcrOdUAvHxg99A/exec";
 
 /* ---------- state ---------- */
 const KEY = "salesup_cham_diem_v1";
@@ -353,7 +353,7 @@ let fSup = "", fSalon = "";
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/g,"d");
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\u0111/g,"d");
 const initials = n => n.trim().split(/\s+/).slice(-2).map(w=>w[0]).join("").toUpperCase();
 const fmtTime = iso => { const d = new Date(iso); const p = n => String(n).padStart(2,"0");
   return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
