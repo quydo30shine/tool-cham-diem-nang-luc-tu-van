@@ -72,6 +72,11 @@
   .filters{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px}
   .f{display:flex; align-items:center; gap:8px}
   .ghost.sm{padding:6px 11px; font-size:13px}
+  .syncst{font-size:12.5px; color:var(--ink-3); display:flex; align-items:center; gap:6px; white-space:nowrap}
+  .syncst .dot{width:7px; height:7px; border-radius:50%; background:var(--ink-3); flex:none}
+  .syncst.ok .dot{background:var(--good)}
+  .syncst.wait .dot{background:var(--mid)}
+  .syncst.err{color:var(--low)} .syncst.err .dot{background:var(--low)}
 
   /* ---- tabs ---- */
   .tabs{display:flex; gap:4px; background:var(--panel-2); border:1px solid var(--line);
@@ -263,6 +268,8 @@
     </div>
     <div class="toolbar">
       <span class="grow left" id="donesum">Chưa có nhân sự nào được chấm.</span>
+      <span class="syncst" id="syncst"></span>
+      <button class="ghost sm hide" id="resync">Đồng bộ lại</button>
       <button class="ghost" id="csv">Tải file CSV</button>
     </div>
     <div class="tablewrap" id="donewrap"></div>
@@ -323,12 +330,19 @@ const formOf = v => v === "Stylist" ? FORMS.Stylist : FORMS.SkinnerSup;
 /* Danh sách Salesup — theo file "Chia salon cụm Salesup - phân cụm mới tháng 7" */
 const SALESUP = ["Nguyễn Thị Phương Anh","Nguyễn Thị Thanh Tâm","Ngô Thị Mai Loan","Phạm Thị Nga"];
 
+/* ---------- kho lưu chung ----------
+   URL ứng dụng web Apps Script (xem apps_script_ket_qua_cham.gs).
+   Để rỗng "" thì tool chạy như cũ: chỉ lưu trên máy người chấm. */
+const SYNC_URL = "";
+
 /* ---------- state ---------- */
 const KEY = "salesup_cham_diem_v1";
 const ME_KEY = "salesup_nguoi_cham";
 let done = [];
 try { done = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { done = []; }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e){} };
+
+let syncing = false, syncAt = null, syncErr = "";
 
 let me = "";
 try { me = localStorage.getItem(ME_KEY) || ""; } catch(e) { me = ""; }
@@ -378,7 +392,7 @@ function tab(which){
   $("tab-done").setAttribute("aria-selected", !s);
   $("p-score").classList.toggle("hide", !s);
   $("p-done").classList.toggle("hide", s);
-  if (!s) renderDone();
+  if (!s){ renderDone(); if (SYNC_URL) dongBo({im: true}); }
 }
 $("tab-score").onclick = () => tab("score");
 $("tab-done").onclick  = () => tab("done");
@@ -548,12 +562,14 @@ function submit(){
     scores: scores.slice(), gAvg: r.gAvg, on5: r.on5, on100: r.on100,
     at: new Date().toISOString()
   };
+  if (SYNC_URL) rec.pending = true;   // lưu máy trước, đẩy lên sau
   const k = done.findIndex(d => d.id === rec.id);
   const again = k >= 0;
   if (again) done[k] = rec; else done.unshift(rec);
   save();
   $("cnt").textContent = done.length;
   toast(`${again ? "Đã cập nhật" : "Hoàn tất"} chấm điểm ${picked.n} — ${r.on100.toFixed(1)}/100`);
+  dongBo({im: true});
   picked = null; scores = [];
   $("form").className = "hide"; $("form").innerHTML = "";
   $("q").focus();
@@ -622,14 +638,98 @@ function renderDone(){
   wrap.querySelectorAll(".del").forEach(b => b.onclick = () => {
     const k = done.findIndex(d => d.id === b.dataset.id);
     if (k < 0) return;
-    if (!confirm(`Xoá kết quả chấm của ${done[k].ten} (ID ${done[k].id})?`)) return;
-    done.splice(k, 1); save(); renderDone();
+    const d = done[k];
+    if (!confirm(SYNC_URL
+      ? `Xoá kết quả chấm của ${d.ten} (ID ${d.id})? Bản ghi sẽ bị xoá khỏi danh sách chung của cả nhóm.`
+      : `Xoá kết quả chấm của ${d.ten} (ID ${d.id})?`)) return;
+    done.splice(k, 1); save();
+    if (SYNC_URL && !d.pending){ delQ.push(d.id); saveDelQ(); dongBo({im: true}); }
+    renderDone();
   });
 }
 
 $("f-sup").onchange   = e => { fSup = e.target.value; renderDone(); };
 $("f-salon").onchange = e => { fSalon = e.target.value; renderDone(); };
 $("f-clear").onclick  = () => { fSup = ""; fSalon = ""; renderDone(); };
+
+/* ---------- đồng bộ với kho lưu chung ----------
+   Máy chấm luôn lưu localStorage trước (không mất khi rớt mạng), rồi mới đẩy lên.
+   Bản ghi chưa đẩy được đánh dấu pending; xoá chưa đẩy được xếp vào delQ. */
+const DELQ_KEY = "salesup_xoa_cho_gui";
+let delQ = [];
+try { delQ = JSON.parse(localStorage.getItem(DELQ_KEY)) || []; } catch(e) { delQ = []; }
+const saveDelQ = () => { try { localStorage.setItem(DELQ_KEY, JSON.stringify(delQ)); } catch(e){} };
+
+const choGui = () => done.filter(d => d.pending).length + delQ.length;
+
+function paintSync(){
+  const el = $("syncst"), btn = $("resync");
+  if (!SYNC_URL){
+    el.className = "syncst"; el.innerHTML = "";
+    btn.classList.add("hide");
+    return;
+  }
+  btn.classList.remove("hide");
+  const n = choGui();
+  let cls = "syncst ok", txt = syncAt ? `Đã đồng bộ ${fmtTime(syncAt)}` : "Chưa đồng bộ";
+  if (syncing){ cls = "syncst wait"; txt = "Đang đồng bộ…"; }
+  else if (syncErr){ cls = "syncst err"; txt = `Chưa gửi được${n?` — ${n} bản ghi chờ`:""}`; }
+  else if (n){ cls = "syncst wait"; txt = `${n} bản ghi chờ gửi`; }
+  el.className = cls;
+  el.innerHTML = `<span class="dot"></span><span>${esc(txt)}</span>`;
+}
+
+async function guiLen(payload){
+  // text/plain để tránh preflight CORS của Apps Script
+  const res = await fetch(SYNC_URL, {
+    method: "POST", redirect: "follow",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify(payload)
+  });
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || "Máy chủ từ chối");
+  return j;
+}
+
+async function dongBo({im = false} = {}){
+  if (!SYNC_URL || syncing) return;
+  syncing = true; syncErr = ""; paintSync();
+  try {
+    // 1) đẩy các bản ghi chấm chưa gửi (gồm cả dữ liệu cũ đã chấm trên máy này)
+    for (const rec of done.filter(d => d.pending)){
+      const {pending, ...sach} = rec;
+      await guiLen({rec: {...sach, xep_loai: bandTxt(rec.on100)}});
+      delete rec.pending; save();
+    }
+    // 2) đẩy các lệnh xoá chưa gửi
+    while (delQ.length){
+      await guiLen({action: "delete", id: delQ[0]});
+      delQ.shift(); saveDelQ();
+    }
+    // 3) kéo danh sách chung về
+    const res = await fetch(SYNC_URL + "?t=" + Date.now(), {redirect: "follow"});
+    const j = await res.json();
+    if (!j.ok) throw new Error(j.error || "Không đọc được dữ liệu chung");
+
+    // hợp nhất: máy chủ là nguồn chính; bản ghi còn pending ở máy này thì giữ lại
+    const map = new Map((j.rows || []).map(r => [String(r.id), r]));
+    for (const d of done) if (d.pending) map.set(String(d.id), d);
+    done = [...map.values()].sort((a,b) => String(b.at).localeCompare(String(a.at)));
+    save();
+    syncAt = new Date().toISOString();
+    if (im === false) toast(`Đã đồng bộ — ${done.length} nhân sự đã chấm.`);
+  } catch(e){
+    syncErr = String(e.message || e);
+    if (im === false) toast(`Chưa đồng bộ được: ${syncErr}`);
+  } finally {
+    syncing = false;
+    paintSync();
+    if (!$("p-done").classList.contains("hide")) renderDone();
+    $("cnt").textContent = done.length;
+  }
+}
+
+$("resync").onclick = () => dongBo({im: false});
 
 /* ---------- xuất CSV ---------- */
 $("csv").onclick = () => {
@@ -675,6 +775,23 @@ $("me").onchange = e => {
 
 /* ---------- init ---------- */
 paintMe();
+paintSync();
 $("cnt").textContent = done.length;
 $("q").focus();
+
+/* Kéo danh sách chung ngay khi mở link, đồng thời đẩy nốt dữ liệu đã chấm
+   còn nằm trên máy này (đánh dấu pending để lần đồng bộ đầu tiên gửi lên). */
+if (SYNC_URL){
+  let vaChua = false;
+  try {
+    if (!localStorage.getItem("salesup_da_chuyen_kho_chung")){
+      done.forEach(d => d.pending = true);
+      localStorage.setItem("salesup_da_chuyen_kho_chung", "1");
+      vaChua = done.length > 0;
+      save();
+    }
+  } catch(e){}
+  dongBo({im: !vaChua});
+  setInterval(() => { if (choGui() || !syncAt) dongBo({im: true}); }, 60000);
+}
 </script>
