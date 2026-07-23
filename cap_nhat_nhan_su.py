@@ -97,6 +97,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ghi", action="store_true", help="ghi thay đổi vào file HTML")
     ap.add_argument("--day", action="store_true", help="commit + push lên GitHub Pages")
+    ap.add_argument("--chi-them-moi", action="store_true",
+                    help="CHỈ thêm nhân sự có ID chưa tồn tại; không đổi salon/level và "
+                         "không gắn 'Danh sách cũ' cho ai. Dùng khi file mới là lát cắt hẹp.")
     args = ap.parse_args()
 
     html = HTML.read_text(encoding="utf-8")
@@ -138,21 +141,30 @@ def main():
 
     # --- gộp cũ + mới ---
     them, doi, giu = [], [], []
-    ket = {}
-    for i, o in moi.items():
-        o.pop("off", None)
-        if i in cu:
-            c = cu[i]
-            if any(c.get(k, "") != o.get(k, "") for k in ("n", "s", "v", "l")) or c.get("off"):
-                doi.append((c, o))
-        else:
-            them.append(o)
-        ket[i] = o
-    for i, c in cu.items():
-        if i not in ket:
-            c["off"] = 1
-            ket[i] = c
-            giu.append(c)
+    if args.chi_them_moi:
+        # Giữ nguyên toàn bộ danh sách cũ, chỉ chèn thêm ID chưa có.
+        ket = dict(cu)
+        for i, o in moi.items():
+            if i not in cu:
+                o.pop("off", None)
+                ket[i] = o
+                them.append(o)
+    else:
+        ket = {}
+        for i, o in moi.items():
+            o.pop("off", None)
+            if i in cu:
+                c = cu[i]
+                if any(c.get(k, "") != o.get(k, "") for k in ("n", "s", "v", "l")) or c.get("off"):
+                    doi.append((c, o))
+            else:
+                them.append(o)
+            ket[i] = o
+        for i, c in cu.items():
+            if i not in ket:
+                c["off"] = 1
+                ket[i] = c
+                giu.append(c)
 
     ds = sorted(ket.values(), key=lambda x: (x.get("off", 0), x["s"], x["n"]))
 
